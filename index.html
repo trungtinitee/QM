@@ -1,0 +1,3255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý &amp; tạo báo giá</title>
+<style>
+:root{--green:#16845b;--green2:#0f6b49;--bg:#f4f7f6;--card:#fff;--text:#19322a;--muted:#6d7c77;--line:#dfe8e4;--danger:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font-family:Roboto,Arial,sans-serif}
+header{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;padding:18px 20px;position:sticky;top:0;z-index:10}
+.header-row{max-width:1200px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:22px;font-weight:700}.sub{font-size:12px;opacity:.85;margin-top:3px}
+.container{max-width:1200px;margin:18px auto 90px;padding:0 14px}
+.tabs{display:flex;background:#fff;border:1px solid var(--line);border-radius:14px;padding:5px;margin-bottom:15px;box-shadow:0 2px 8px #00000008}
+.tab{flex:1;border:0;background:none;padding:12px;border-radius:10px;font-weight:700;color:var(--muted);cursor:pointer}
+.tab.active{background:#e5f5ee;color:var(--green2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:15px;box-shadow:0 2px 10px #00000006}
+h2{margin:0 0 14px;font-size:19px}h3{font-size:15px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+input,select,textarea{width:100%;border:1px solid #ccd9d4;border-radius:9px;padding:10px;background:#fff;color:var(--text);font-size:14px}
+textarea{min-height:70px;resize:vertical}.wide{grid-column:span 2}
+button{border:0;border-radius:9px;padding:10px 13px;font-weight:700;cursor:pointer}
+.btn{background:var(--green);color:#fff}.btn:hover{background:var(--green2)}.btn-light{background:#edf4f1;color:var(--green2)}.btn-danger{background:#fdecea;color:var(--danger)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.right{margin-left:auto}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:720px;background:#fff}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:middle}th{background:#f2f7f5;font-size:12px;color:#50645d}td.num,th.num{text-align:right}
+.quote-table input,.quote-table select{min-width:90px;padding:7px}.quote-table .name{min-width:220px}
+.total-box{max-width:430px;margin:15px 0 0 auto}.total-row{display:flex;justify-content:space-between;padding:7px 0}.total-row.final{font-size:18px;font-weight:700;border-top:2px solid var(--line);margin-top:4px;padding-top:11px}
+.empty{text-align:center;color:var(--muted);padding:25px}
+.small{font-size:12px;color:var(--muted)}
+.search{max-width:330px;margin-bottom:10px}
+.footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 14px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.wide{grid-column:span 2}.header-row{align-items:flex-start}.container{padding:0 9px}.card{padding:12px}}
+@media(max-width:480px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.tab{font-size:12px;padding:11px 5px}.brand{font-size:19px}}
+@media print{
+ body{background:#fff}.no-print,header,.tabs,.footer,.actions,.search,.delete-col{display:none!important}
+ .container{max-width:none;margin:0;padding:0}.card{border:0;box-shadow:none;padding:0;margin-bottom:10px}
+ #quotePrint{display:block!important}input,select,textarea{border:0;padding:0;appearance:none}
+ table{min-width:0}th,td{font-size:11px;padding:6px}
+}
+
+/* Kéo thả sắp xếp dòng báo giá */
+.drag-handle{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:0;cursor:grab;user-select:none;touch-action:none;color:#777;font-weight:700;font-size:17px;vertical-align:middle;border-radius:5px}.drag-cell{width:55px;text-align:center;white-space:nowrap;padding:4px!important}.drag-cell .drag-handle{margin:auto}
+.drag-handle:hover{background:#eef3f0;color:#222}
+.drag-handle:active{cursor:grabbing}
+.quote-row-dragging{opacity:.45}
+.quote-row-drop-target{outline:2px dashed #62a88a;outline-offset:-2px}.quote-drag-placeholder td{padding:0!important}.quote-drag-placeholder{height:44px}
+@media print{.drag-handle{display:none!important}}
+.quote-heading td{background:#eaf6f0;font-weight:700;color:var(--green2);font-size:14px;border-bottom:1px solid #cfe4da}
+.quote-heading input{font-weight:700;background:transparent;border:0;font-size:14px}
+.quote-subheading td{font-weight:700;font-style:italic;text-align:left;background:transparent;color:#111;padding-top:5px;padding-bottom:5px}
+.quote-subheading input{font-weight:700;font-style:italic;text-align:left;background:transparent;border:0;font-size:13px;width:100%}
+textarea.item-detail{min-height:60px;resize:vertical;overflow:auto;line-height:1.35;max-height:none}
+textarea.notes-auto-grow{min-height:70px;resize:vertical;overflow:auto;line-height:1.45;max-height:none}
+textarea.item-detail.auto-grow, textarea.price-detail.auto-grow, textarea.notes-auto-grow{height:auto;overflow:hidden}
+/* V2.25: cho phép ô mô tả chi tiết tự giãn theo nội dung trên màn hình */
+@media screen{
+  .quote-table textarea.item-detail,
+  #price textarea.price-detail,
+  #notes{
+    min-height:60px !important;
+    height:auto !important;
+    max-height:none !important;
+    resize:vertical !important;
+    overflow-x:hidden !important;
+    overflow-y:hidden !important;
+    white-space:pre-wrap !important;
+    overflow-wrap:anywhere !important;
+    field-sizing:content;
+  }
+}
+@media print{
+ .seller-print{display:block!important}
+ .quote-heading td{background:#eee!important;color:#000!important}
+ .quote-subheading td{background:transparent!important;color:#111!important;font-weight:700!important;font-style:italic!important;text-align:left!important;border:0!important}
+ .quote-subheading td input{font-weight:700!important;font-style:italic!important;text-align:left!important;color:#111!important}
+}
+ 
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;height:62px;background:#fff;border-top:1px solid var(--line);display:flex;z-index:20;box-shadow:0 -3px 12px #0000000a}
+.bottom-tab{flex:1;border:0;background:#fff;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;cursor:pointer}
+.bottom-tab span{font-size:19px;line-height:20px}.bottom-tab.active{color:var(--green2);background:#eef8f4}
+.footer{position:static!important;margin-bottom:62px}
+@media(max-width:480px){.bottom-nav{height:64px}.bottom-tab{font-size:10px}}
+.price-update-status{padding:8px 10px;border-radius:8px;background:#f2f8f5}
+
+.price-detail{min-width:260px;min-height:62px;resize:none;overflow:hidden;line-height:1.35}
+.price-name{min-width:180px}
+
+
+.quote-edit-btn{background:#fff4d6;color:#8a5a00;border:1px solid #f0d48a;padding:6px 9px;font-size:12px;margin-right:4px}
+.quote-price-input{width:100%;text-align:right;box-sizing:border-box}
+.quote-edit-panel{border:1px solid #bfe0d2;background:#f4fbf8;border-radius:12px;padding:14px;margin-bottom:15px}
+.quote-edit-panel .edit-title{font-weight:700;color:var(--green2);margin-bottom:5px}
+.quote-edit-meta{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.quote-edit-row{display:grid;grid-template-columns:1fr 180px auto;gap:10px;align-items:end}
+.quote-edit-price input{font-weight:700}
+.quote-price-highlight{outline:2px solid #f0c75e;outline-offset:-2px;background:#fffaf0!important}
+@media(max-width:700px){.quote-edit-row{grid-template-columns:1fr}.quote-edit-row button{width:100%}}
+
+.discount-toggle{display:flex;align-items:center;gap:9px;min-height:40px;font-size:14px}.switch{position:relative;display:inline-block;width:44px;height:24px}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;background:#cbd5d1;border-radius:999px;cursor:pointer;transition:.2s}.slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px #0002}.switch input:checked+.slider{background:#15803d}.switch input:checked+.slider:before{transform:translateX(20px)}
+@media(max-width:700px){
+ .price-mobile-hide{display:none!important}
+ #price .table-wrap{border:0;overflow:visible}
+ #price table,#price thead,#price tbody,#price tr,#price td{display:block;width:100%;min-width:0}
+ #price thead{display:none}
+ #price tbody tr{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px;box-shadow:0 2px 8px #00000008}
+ #price tbody td{border:0;padding:4px 0;text-align:left!important}
+ #price tbody td:before{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:3px}
+ #price tbody td:nth-child(1):before{content:"Mã"}
+ #price tbody td:nth-child(2):before{content:"Tên hạng mục"}
+ #price tbody td:nth-child(3):before{content:"Chi tiết hạng mục"}
+ #price tbody td:nth-child(4):before{content:"ĐVT"}
+ #price tbody td:nth-child(5):before{content:"Giá vốn"}
+ #price tbody td:nth-child(6):before{content:"Hệ số lợi nhuận"}
+ #price tbody td:nth-child(7):before{content:"Giá bán"}
+ #price tbody td:nth-child(8):before{content:"Nhóm"}
+ #price tbody td:nth-child(9){text-align:right!important;padding-top:7px}
+ #price tbody td:nth-child(9):before{display:none}
+ #price tbody input,#price tbody textarea{font-size:14px;padding:9px}
+ .price-detail{min-height:75px}
+}
+
+@media(max-width:700px){
+ .container{padding:0 10px;margin-top:12px;margin-bottom:82px}
+ .card{border-radius:12px;padding:12px}
+ #price .price-actions{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+ #price .price-actions .btn{width:100%}
+ #price .price-actions .search{width:100%;max-width:none;margin:0}
+ #price .table-wrap{margin-top:8px}
+ #price .card h2{font-size:18px}
+ #price .small{line-height:1.45}
+ .bottom-nav{height:68px}
+ .footer{display:none}
+}
+
+/* V1.8 visual refresh */
+body{background:#f1f5f3}
+header{padding:15px 16px;box-shadow:0 2px 12px #00000012}
+.brand{letter-spacing:-.3px}
+.container{margin-top:14px}
+.card{box-shadow:0 3px 14px #00000008;border-color:#e1ebe7}
+h2{letter-spacing:-.2px}
+.btn{box-shadow:0 2px 5px #16845b26}
+.btn-light{border:1px solid #dbe8e3}
+.data-card{padding:10px 13px}
+.data-details{margin-top:0}
+.data-card summary,.data-details summary{list-style:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--green2);padding:3px}
+.data-card summary::-webkit-details-marker,.data-details summary::-webkit-details-marker{display:none}
+.data-card summary:after,.data-details summary:after{content:"⌄";float:right;font-size:16px}
+.data-card details[open] summary:after,.data-details[open] summary:after{content:"⌃"}
+.data-actions{display:flex;gap:8px;margin-top:10px}
+.data-btn{flex:1;background:#f0f7f4;color:var(--green2);border:1px solid #d8e8e2;padding:9px;border-radius:9px;font-size:12px;font-weight:700}
+.data-btn:hover{background:#e4f2ec}
+.data-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.price-actions{background:#f8fbfa;border:1px solid #e4ece9;border-radius:12px;padding:10px}
+.price-actions .search{margin-bottom:0}
+@media(max-width:700px){
+ .container{padding:0 10px}
+ .card{margin-bottom:10px}
+ .data-actions{display:grid;grid-template-columns:1fr 1fr}
+ .data-btn{min-height:42px}
+ .price-actions{padding:9px}
+}
+
+
+.data-toolbar{display:flex;align-items:center;gap:8px;background:#f7faf9;border:1px solid #e0ebe6;border-radius:11px;padding:7px 9px;margin-bottom:10px}
+.toolbar-label{font-size:11px;font-weight:700;color:var(--muted);margin-right:auto}
+.data-toolbar .data-btn{padding:8px 11px;font-size:12px;white-space:nowrap}
+@media(max-width:700px){
+ .data-toolbar{width:100%;gap:6px}
+ .data-toolbar .data-btn{flex:1;min-height:40px}
+ .toolbar-label{flex:0 0 auto}
+}
+
+/* QuotePro V1.18 print consistency */
+.amount-words{max-width:720px;margin:8px 0 0 auto;font-size:13px;line-height:1.5}
+.print-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 22px}
+.print-info-grid>div{min-width:0}
+.print-customer-wide{grid-column:1/-1}
+@media print{
+ .print-info-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:2px 22px}
+ .amount-words{max-width:none;margin:10px 0 0;font-size:12px}
+ .total-box{max-width:430px;margin:12px 0 0 auto}
+ .print-quote-info{border-bottom:1px solid #bbb;padding-bottom:9px}
+}
+
+
+/* QuotePro V1.40 company logo */
+.logo-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.logo-picker input[type=file]{display:none}.logo-preview{width:72px;height:72px;object-fit:contain;border:1px solid #d7e4df;border-radius:10px;background:#fff;padding:4px;display:none}.hint{display:block;color:#6b7773;font-size:12px;margin-top:5px}.seller-print-inner{display:flex;align-items:center;justify-content:center;gap:16px}.print-logo-wrap{width:82px;min-width:82px;height:82px;display:flex;align-items:center;justify-content:center}.print-company-logo{max-width:82px;max-height:82px;object-fit:contain;display:none}.seller-print-text{min-width:0;text-align:center}
+@media print{.seller-print-inner{gap:14px}.print-logo-wrap{width:72px;min-width:72px;height:72px}.print-company-logo{max-width:72px;max-height:72px}.seller-print-text{text-align:center}}
+
+/* QuotePro V1.12 UI cleanup */
+.seller-print,.print-quote-info,.print-intro{display:none}
+@media print{
+ body{background:#fff!important;color:#111!important}
+ header,.no-print,.bottom-nav,.footer{display:none!important}
+ .container{max-width:none!important;margin:0!important;padding:0!important}
+ .card{border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 10px!important}
+ #quotePrint{display:block!important}
+ .seller-print{display:block!important;text-align:center;border-bottom:1px solid #888;padding:0 0 9px;margin:0 0 12px!important;line-height:1.45}
+ .print-company-name{font-size:18px;font-weight:700;text-transform:uppercase}
+ .print-quote-info{display:block!important;font-size:12px;line-height:1.55;margin:0 0 12px}
+ .print-title{text-align:center;font-size:18px;font-weight:700;margin:0 0 7px}
+ .print-intro{display:block!important;font-size:12px;line-height:1.5;text-align:justify;margin:10px 0 14px}
+ input,select,textarea{border:0!important;padding:0!important;appearance:none}
+ textarea::placeholder,input::placeholder{color:transparent!important;opacity:0!important}
+@media print{textarea.item-detail,textarea.price-detail,textarea.notes-auto-grow{height:auto!important;min-height:0!important;overflow:visible!important}}
+ .table-wrap{border:0!important;overflow:visible!important}
+ table{min-width:0!important;width:100%!important}
+ th,td{font-size:11px!important;padding:6px!important}
+ .quote-heading td{background:#eee!important;color:#111!important}
+ /* Căn chỉnh bảng báo giá khi in */
+ .quote-table th:nth-child(1),.quote-table td:nth-child(1),
+ .quote-table th:nth-child(3),.quote-table td:nth-child(3),
+ .quote-table th:nth-child(5),.quote-table td:nth-child(5){text-align:center!important}
+ .quote-table th:nth-child(2),.quote-table td:nth-child(2){text-align:left!important}
+ .quote-table th:nth-child(4),.quote-table td:nth-child(4),
+ .quote-table th:nth-child(6),.quote-table td:nth-child(6){text-align:right!important}
+}
+@media(max-width:700px){
+ .container{padding:0 10px;margin-bottom:82px}
+ .card{padding:12px;border-radius:12px}
+ #quote .grid{grid-template-columns:1fr 1fr}
+ #quote .wide{grid-column:span 2}
+ #quotePrint{overflow:hidden}
+ #quotePrint .table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+ #quotePrint .quote-table{min-width:700px}
+ .data-toolbar{width:100%;gap:6px}
+ .data-toolbar .data-btn{flex:1;min-height:40px;font-size:11px}
+ .toolbar-label{flex:0 0 auto}
+ .quote-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:7px!important}
+ .quote-actions .btn,.quote-actions .btn-light{width:100%;min-height:42px}
+}
+@media(max-width:430px){
+ #quote .grid{grid-template-columns:1fr}
+ #quote .wide{grid-column:span 1}
+ .data-toolbar{flex-wrap:wrap}
+ .toolbar-label{width:100%;margin:0 0 2px}
+ .quote-actions{grid-template-columns:1fr 1fr}
+}
+
+.brand-block{min-width:0}.file-menu-wrap{position:relative;flex:0 0 auto}
+.file-menu-btn{background:#ffffff1f;color:#fff;border:1px solid #ffffff45;padding:8px 12px;border-radius:9px;font-weight:700;font-size:13px}
+.file-menu-btn:hover{background:#ffffff30}
+.file-menu{display:none;position:absolute;right:0;top:calc(100% + 7px);width:190px;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 8px 25px #00000020;overflow:hidden;z-index:100}
+.file-menu.open{display:block}
+.file-menu button{display:block;width:100%;text-align:left;background:#fff;border:0;border-radius:0;padding:11px 13px;color:var(--text);font-size:13px;font-weight:600}
+.file-menu button:hover{background:#eef7f3;color:var(--green2)}
+.file-menu .file-menu-danger{color:#b42318}
+.file-menu .file-menu-danger:hover{background:#fff1f0;color:#b42318}
+.file-separator{height:1px;background:var(--line)}
+@media(max-width:480px){
+ .file-menu-btn span{display:none}
+ .file-menu-btn{font-size:17px;padding:7px 10px}
+ .file-menu{width:180px}
+}
+
+/* V1.26: modal picker + polished notifications */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(20,38,31,.45);backdrop-filter:blur(3px);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-backdrop.open{display:flex}
+.modal{width:min(760px,100%);max-height:min(82vh,720px);background:#fff;border:1px solid #dce8e3;border-radius:18px;box-shadow:0 20px 60px #0003;overflow:hidden;display:flex;flex-direction:column}
+.modal-head{display:flex;align-items:center;gap:10px;padding:15px 17px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#f8fcfa,#eef8f4)}
+.modal-title{font-size:17px;font-weight:700;flex:1}.modal-close{width:36px;height:36px;padding:0;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:20px;color:var(--muted)}
+.modal-search{padding:12px 15px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:1}
+.modal-search input{padding:12px 13px;border-radius:11px;background:#f8fbfa}
+.picker-list{overflow:auto;padding:10px}.picker-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px;border:1px solid #e1ebe7;border-radius:12px;background:#fff;margin-bottom:8px;cursor:pointer;transition:.15s}
+.picker-item:hover,.picker-item:focus{border-color:#9ccdb9;background:#f4fbf8;outline:none;transform:translateY(-1px)}
+.picker-main{min-width:0}.picker-name{font-weight:700;font-size:14px}.picker-meta{font-size:11px;color:var(--muted);margin-top:4px}.picker-detail{font-size:12px;color:#52645d;margin-top:6px;line-height:1.4;white-space:pre-line}.picker-price{font-weight:700;color:var(--green2);white-space:nowrap;text-align:right;font-size:13px}.picker-empty{text-align:center;padding:30px 15px;color:var(--muted)}
+.quote-pick-btn{width:100%;text-align:left;background:#f8fbfa;border:1px solid #ccd9d4;color:var(--text);font-weight:600;min-height:39px}.quote-pick-btn:hover{background:#eef8f4;border-color:#a9d2c2;color:var(--green2)}
+.toast-wrap{position:fixed;right:16px;top:16px;z-index:400;display:flex;flex-direction:column;gap:8px;pointer-events:none}.toast{min-width:260px;max-width:420px;background:#fff;border:1px solid #dce8e3;border-left:4px solid var(--green);border-radius:12px;padding:11px 13px;box-shadow:0 10px 30px #0002;font-size:13px;font-weight:600;animation:toastIn .18s ease-out}.toast.error{border-left-color:var(--danger)}
+.confirm-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+@keyframes toastIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:600px){.modal-backdrop{padding:8px;align-items:flex-end}.modal{max-height:88vh;border-radius:18px 18px 0 0}.picker-item{grid-template-columns:1fr}.picker-price{text-align:left}.toast-wrap{left:10px;right:10px;top:10px}.toast{min-width:0;max-width:none}}
+
+/* QuotePro V1.34 - professional print table */
+@media print{
+  .quote-table{
+    width:100%!important;
+    border-collapse:collapse!important;
+    border-spacing:0!important;
+    table-layout:fixed!important;
+    margin-top:8px!important;
+    font-size:11px!important;
+    border:1px solid #666!important;
+  }
+  .quote-table thead{display:table-header-group!important}
+  .quote-table tr{page-break-inside:avoid!important}
+  .quote-table th,
+  .quote-table td{
+    border:1px solid #666!important;
+    box-shadow:none!important;
+    padding:7px 6px!important;
+    vertical-align:middle!important;
+    line-height:1.35!important;
+    background:#fff!important;
+    overflow:hidden!important;
+  }
+  .quote-table th{
+    background:#f0f0f0!important;
+    color:#111!important;
+    font-weight:700!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+  }
+  .quote-table th:nth-child(1),.quote-table td:nth-child(1){width:6%!important;text-align:center!important}
+  .quote-table th:nth-child(2),.quote-table td:nth-child(2){width:42%!important;text-align:left!important}
+  .quote-table th:nth-child(3),.quote-table td:nth-child(3){width:9%!important;text-align:center!important}
+  .quote-table th:nth-child(4),.quote-table td:nth-child(4){width:15%!important;text-align:right!important}
+  .quote-table th:nth-child(5),.quote-table td:nth-child(5){width:8%!important;text-align:center!important}
+  .quote-table th:nth-child(6),.quote-table td:nth-child(6){width:20%!important;text-align:right!important}
+  .quote-table th:nth-child(7),.quote-table td:nth-child(7){display:none!important}
+  /* Số lượng: căn giữa cả ô và giá trị đang nhập */
+  .quote-table th:nth-child(5),
+  .quote-table td:nth-child(5),
+  .quote-table td:nth-child(5) input{
+    text-align:center!important;
+  }
+  .quote-table td:nth-child(4) input{ text-align:right!important; }
+  /* Khong de input tran ra ngoai o lam dut duong ke khi in */
+  .quote-table th input,
+  .quote-table td input,
+  .quote-table td select{
+    min-width:0!important;
+    max-width:100%!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+    border:0!important;
+    background:transparent!important;
+  }
+  .quote-table td:nth-child(5) input{ text-align:center!important; }
+  .quote-table .item-detail{
+    display:block!important;
+    width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:3px 0 0!important;
+    padding:0!important;
+    border:0!important;
+    outline:0!important;
+    resize:none!important;
+    overflow:visible!important;
+    font:inherit!important;
+    line-height:1.35!important;
+    color:#444!important;
+    background:transparent!important;
+  }
+  .quote-table .quote-pick-btn{
+    display:block!important;
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    color:#111!important;
+    text-align:left!important;
+    font:inherit!important;
+    font-weight:600!important;
+  }
+  .quote-heading td{
+    border:1px solid #777!important;
+    background:#e9e9e9!important;
+    color:#111!important;
+    font-weight:700!important;
+    padding:7px 8px!important;
+  }
+  .quote-heading td input{font-weight:700!important;color:#111!important}
+  .total-box{margin-top:12px!important;border-top:0!important}
+  .total-row{padding:5px 0!important}
+  .total-row.final{border-top:1.5px solid #555!important;font-size:13px!important;padding-top:8px!important}
+}
+
+/* QuotePro V1.55 - hide inactive discount row when printing */
+@media print{
+  #discountRow.discount-print-hidden{display:none!important}
+}
+
+@media print{
+ .quote-subheading td{background:transparent!important;color:#111!important;font-weight:700!important;font-style:italic!important;text-align:left!important;border:0!important}
+ .quote-subheading td input{font-weight:700!important;font-style:italic!important;text-align:left!important;color:#111!important}
+}
+</style>
+<style>
+/* QuotePro V1.37: bố cục bảng in + chữ ký + dự án */
+.quote-signature{display:none}
+@media print{
+ .quote-table{table-layout:fixed!important;width:100%!important;border-collapse:collapse!important;border-spacing:0!important}
+ .quote-table th,.quote-table td{border:1px solid #666!important;box-sizing:border-box!important;vertical-align:middle!important}
+ .quote-table th:nth-child(1),.quote-table td:nth-child(1){width:6%!important;text-align:center!important}
+ .quote-table th:nth-child(2),.quote-table td:nth-child(2){width:41%!important;text-align:left!important}
+ .quote-table th:nth-child(3),.quote-table td:nth-child(3){width:9%!important;text-align:center!important}
+ .quote-table th:nth-child(4),.quote-table td:nth-child(4){width:8%!important;text-align:center!important}
+ .quote-table th:nth-child(5),.quote-table td:nth-child(5){width:16%!important;text-align:right!important}
+ .quote-table th:nth-child(6),.quote-table td:nth-child(6){width:20%!important;text-align:right!important}
+ .quote-table th:nth-child(7),.quote-table td:nth-child(7){display:none!important}
+ .quote-table td:nth-child(4) input,.quote-table td:nth-child(4) .qty-input{text-align:center!important;width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ .quote-table td:nth-child(5) input{ text-align:right!important;width:100%!important;min-width:0!important;box-sizing:border-box!important}
+ .quote-signature{display:flex!important;justify-content:flex-end;margin-top:28px;page-break-inside:avoid}
+ .signature-box{width:220px;text-align:center;min-height:145px}
+ .signature-title{font-weight:700;font-size:12px}
+ .signature-note{font-size:11px;font-style:italic;margin-top:4px}
+ .signature-space{height:82px}
+ .signature-name{font-weight:700;font-size:12px}
+}
+
+/* QuotePro V1.39 - thong nhat font ban in */
+@media print{
+  body{font-family:Roboto,Arial,sans-serif!important;font-size:11px!important;line-height:1.4!important;color:#111!important}
+  .seller-print{font-size:11px!important;line-height:1.4!important}
+  .print-company-name{font-size:16px!important;line-height:1.35!important;font-weight:700 !important}
+  .print-quote-info{font-size:11px!important;line-height:1.45!important}
+  .print-title{font-size:16px!important;line-height:1.35!important;font-weight:700 !important}
+  .print-intro{font-size:11px!important;line-height:1.45!important}
+  .quote-table,.quote-table th,.quote-table td{font-size:11px!important;line-height:1.4!important}
+  .quote-heading td,.quote-heading td input{font-size:11px!important;line-height:1.4!important}
+  .total-box,.total-row{font-size:11px!important;line-height:1.4!important}
+  .total-row.final{font-size:12px!important;line-height:1.4!important}
+  .amount-words{font-size:11px!important;line-height:1.45!important}
+  .signature-title,.signature-note,.signature-name{font-size:11px!important;line-height:1.4!important}
+}
+</style>
+
+<style>
+/* QuotePro V1.42 - print normalization */
+@media print{
+  .seller-print-inner{display:flex!important;align-items:center!important;justify-content:center!important;gap:16px!important;min-height:0!important;}
+  .print-logo-wrap{width:96px!important;min-width:96px!important;height:96px!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+  .print-company-logo{display:block!important;max-width:96px!important;max-height:96px!important;width:auto!important;height:auto!important;object-fit:contain!important;}
+  .seller-print-text{min-width:0!important;text-align:left!important;font-size:11px!important;line-height:1.45!important;}
+  .print-company-name{font-size:16px!important;line-height:1.25!important;font-weight:700 !important;margin-bottom:2px!important;}
+  .seller-print{font-size:11px!important;line-height:1.45!important;padding-bottom:8px!important;margin-bottom:10px!important;}
+  .print-quote-info{font-size:11px!important;line-height:1.45!important;margin-bottom:9px!important;}
+  .print-title{font-size:17px!important;line-height:1.25!important;margin-bottom:6px!important;}
+  .print-intro{font-size:11px!important;line-height:1.45!important;margin:8px 0 11px!important;}
+  .quote-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;border-spacing:0!important;}
+  .quote-table th,.quote-table td{font-size:11px!important;line-height:1.35!important;padding:5px 6px!important;border:1px solid #555!important;vertical-align:middle!important;}
+  .quote-table th:nth-child(1),.quote-table td:nth-child(1){width:6%!important;text-align:center!important;}
+  .quote-table th:nth-child(2),.quote-table td:nth-child(2){width:40%!important;text-align:left!important;}
+  .quote-table th:nth-child(3),.quote-table td:nth-child(3){width:9%!important;text-align:center!important;}
+  .quote-table th:nth-child(4),.quote-table td:nth-child(4){width:8%!important;text-align:center!important;}
+  .quote-table th:nth-child(5),.quote-table td:nth-child(5){width:17%!important;text-align:right!important;}
+  .quote-table th:nth-child(6),.quote-table td:nth-child(6){width:20%!important;text-align:right!important;}
+  .quote-table input,.quote-table select,.quote-table textarea{min-width:0!important;width:100%!important;max-width:100%!important;font-size:11px!important;line-height:1.35!important;text-align:inherit!important;overflow:hidden!important;box-sizing:border-box!important;}
+  .quote-heading td{background:#eee!important;color:#111!important;font-weight:700!important;}
+  .total-box{max-width:430px!important;margin:10px 0 0 auto!important;}
+  .total-row{font-size:11px!important;line-height:1.4!important;padding:4px 0!important;}
+  .total-row.final{font-size:12px!important;line-height:1.4!important;padding-top:7px!important;}
+  .amount-words{font-size:11px!important;line-height:1.45!important;margin-top:6px!important;}
+  .quote-signature{margin-top:24px!important;}
+  .signature-title,.signature-note,.signature-name{font-size:11px!important;line-height:1.4!important;}
+  .signature-space{height:58px!important;}
+  .no-print{display:none!important;}
+}
+@media print{
+  .seller-print.no-logo .seller-print-inner{display:block!important;}
+  .seller-print.no-logo .print-logo-wrap{display:none!important;}
+  .seller-print.no-logo .seller-print-text{text-align:center!important;}
+}
+</style>
+
+<style>
+/* QuotePro V1.43 - final print layout */
+@media print{
+  @page{size:A4 portrait;margin:10mm 10mm 10mm 10mm}
+  html,body{width:100%!important;margin:0!important;padding:0!important;background:#fff!important;color:#111!important;font-family:Roboto,Arial,sans-serif!important;font-size:12px!important;line-height:1.4!important}
+  .container{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+  #quotePrint{width:100%!important;margin:0!important;padding:0!important;overflow:visible!important}
+  .seller-print{width:100%!important;margin:0 0 9px!important;padding:0 0 7px!important;border-bottom:1px solid #777!important;font-size:12px!important;line-height:1.35!important}
+  .seller-print-inner{width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:14px!important;min-height:0!important}
+  .seller-print.no-logo .seller-print-inner{display:block!important}
+  .seller-print.no-logo .print-logo-wrap{display:none!important}
+  .seller-print.no-logo .seller-print-text{text-align:center!important}
+  .print-logo-wrap{width:88px!important;min-width:88px!important;height:88px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+  .print-company-logo{max-width:88px!important;max-height:88px!important;width:auto!important;height:auto!important;object-fit:contain!important}
+  .seller-print-text{text-align:left!important;min-width:0!important;font-size:12px!important;line-height:1.35!important}
+  .print-company-name{font-size:15px!important;line-height:1.25!important;font-weight:700 !important;margin:0 0 2px!important}
+  .print-quote-info{display:block!important;font-size:12px!important;line-height:1.35!important;margin:0 0 8px!important;padding:0 0 7px!important;border-bottom:1px solid #aaa!important}
+  .print-title{text-align:center!important;font-size:17px!important;line-height:1.25!important;font-weight:700 !important;margin:0 0 5px!important}
+  .print-info-grid{font-size:12px!important;line-height:1.35!important;gap:2px 22px!important}
+  .print-intro{display:block!important;font-size:12px!important;line-height:1.4!important;text-align:justify!important;margin:7px 0 9px!important}
+  .table-wrap{width:100%!important;overflow:visible!important;margin:0!important}
+  .quote-table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;border-spacing:0!important;margin:0!important}
+  .quote-table th,.quote-table td{font-size:11.5px!important;line-height:1.35!important;padding:5px 6px!important;border:1px solid #555!important;vertical-align:middle!important}
+  .quote-table th:nth-child(1),.quote-table td:nth-child(1){width:6%!important;text-align:center!important}
+  .quote-table th:nth-child(2),.quote-table td:nth-child(2){width:40%!important;text-align:left!important}
+  .quote-table th:nth-child(3),.quote-table td:nth-child(3){width:9%!important;text-align:center!important}
+  .quote-table th:nth-child(4),.quote-table td:nth-child(4){width:8%!important;text-align:center!important}
+  .quote-table th:nth-child(5),.quote-table td:nth-child(5){width:17%!important;text-align:right!important}
+  .quote-table th:nth-child(6),.quote-table td:nth-child(6){width:20%!important;text-align:right!important}
+  .quote-table input,.quote-table select,.quote-table textarea{min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;border:0!important;background:transparent!important;padding:0!important;margin:0!important;font:inherit!important;line-height:inherit!important;color:inherit!important;overflow:hidden!important}
+  .quote-table td:nth-child(4) input,.quote-table td:nth-child(4) .qty-input{text-align:center!important}
+  .quote-table td:nth-child(5) input{text-align:right!important}
+  .quote-heading td{background:#eee!important;color:#111!important;font-weight:700!important}
+  .total-box{width:100%!important;max-width:360px!important;margin:8px 0 0 auto!important}
+  .total-row{font-size:12px!important;line-height:1.35!important;padding:3px 0!important}
+  .total-row.final{font-size:13px!important;line-height:1.35!important;padding-top:6px!important;border-top:1px solid #555!important}
+  .amount-words{font-size:12px!important;line-height:1.35!important;margin:5px 0 0!important}
+  .quote-signature{display:flex!important;justify-content:flex-end!important;margin-top:18px!important;page-break-inside:avoid!important}
+  .signature-box{width:210px!important;text-align:center!important;min-height:110px!important}
+  .signature-title,.signature-note,.signature-name{font-size:12px!important;line-height:1.35!important}
+  .signature-space{height:52px!important}
+  .no-print,.delete-col{display:none!important}
+}
+</style>
+
+
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style id="v166-typography">
+/* V2.22 typography: Roboto throughout */
+html,body,body *{
+  font-family:Roboto,Arial,sans-serif;
+}
+body{
+  font-weight:400;
+  letter-spacing:0;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button,input,select,textarea{
+  font-family:Roboto,Arial,sans-serif !important;
+  font-weight:400;
+}
+h1,h2,h3,h4,h5,h6{
+  font-family:Roboto,Arial,sans-serif;
+  font-weight:600;
+  letter-spacing:-.01em;
+}
+.brand{font-weight:700}
+.tab,.btn,.btn-light,.btn-danger,
+.field label,.amount-words b{
+  font-weight:500;
+}
+.quote-heading td,
+.quote-heading input{
+  font-weight:600;
+}
+.quote-subheading td,
+.quote-subheading input{
+  font-weight:500;
+}
+.total-row.final{
+  font-weight:700;
+  font-size:18px;
+}
+.quote-table th{
+  font-weight:600;
+}
+.drag-handle{
+  font-family:Roboto,Arial,sans-serif !important;
+  font-weight:700;
+}
+@media print{
+  html,body,body *{
+    font-family:Roboto,Arial,sans-serif !important;
+  }
+  .quote-heading td,
+  .quote-heading input{font-weight:600 !important}
+  .quote-subheading td,
+  .quote-subheading input{font-weight:500 !important}
+  .total-row.final{font-weight:700 !important}
+}
+</style>
+
+
+
+<style id="v168-price-table-balance">
+/* V2.22 - cân đối các ô nhập giá trên desktop */
+@media screen and (min-width:701px){
+  #price .table-wrap{
+    overflow-x:auto;
+  }
+  #price table{
+    width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+  }
+  #price table th,
+  #price table td{
+    box-sizing:border-box;
+    padding:8px 9px;
+    vertical-align:middle;
+  }
+  /* Mã | Tên | Chi tiết | ĐVT | Giá vốn | Hệ số | Giá bán | Nhóm | Thao tác */
+  #price table th:nth-child(1),#price table td:nth-child(1){width:7%!important}
+  #price table th:nth-child(2),#price table td:nth-child(2){width:15%!important}
+  #price table th:nth-child(3),#price table td:nth-child(3){width:24%!important}
+  #price table th:nth-child(4),#price table td:nth-child(4){width:7%!important}
+  #price table th:nth-child(5),#price table td:nth-child(5){width:11%!important}
+  #price table th:nth-child(6),#price table td:nth-child(6){width:11%!important}
+  #price table th:nth-child(7),#price table td:nth-child(7){width:10%!important}
+  #price table th:nth-child(8),#price table td:nth-child(8){width:9%!important}
+  #price table th:nth-child(9),#price table td:nth-child(9){width:6%!important}
+
+  #price table input,
+  #price table select,
+  #price table textarea{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #price table .price-detail{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  #price table .money-input,
+  #price table .comma-decimal{
+    text-align:right;
+  }
+  #price table td.num strong{
+    display:block;
+    width:100%;
+    text-align:right;
+    white-space:nowrap;
+  }
+  #price table .delete-col{
+    white-space:nowrap;
+    text-align:center;
+  }
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="v180-print-border-system">
+@media print {
+  .table-wrap {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .quote-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide the action column completely in print. */
+  .quote-table th:nth-child(7),
+  .quote-table td:nth-child(7),
+  .quote-table .delete-col {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  /* Every visible cell has no native border. */
+  .quote-table th,
+  .quote-table td {
+    box-sizing: border-box !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background-clip: padding-box !important;
+  }
+
+  /*
+   * One owner for each vertical separator:
+   * every visible column except the final one draws its RIGHT edge.
+   * The final visible column draws the outside RIGHT edge.
+   */
+  .quote-table th:not(:nth-child(7)),
+  .quote-table td:not(:nth-child(7)) {
+    border-right: 1px solid #666 !important;
+  }
+
+  /* The first visible column owns the outside LEFT edge. */
+  .quote-table th:first-child,
+  .quote-table td:first-child {
+    border-left: 1px solid #666 !important;
+  }
+
+  /*
+   * The header/data rows own their BOTTOM edge.
+   * This makes every horizontal line one continuous row-level boundary.
+   */
+  .quote-table thead tr th {
+    border-top: 1px solid #666 !important;
+    border-bottom: 1px solid #666 !important;
+  }
+
+  .quote-table tbody tr td {
+    border-bottom: 1px solid #666 !important;
+  }
+
+  /* Explicit outside right edge of the last visible column. */
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) {
+    border-right: 1px solid #666 !important;
+  }
+
+  /* Avoid doubled-looking top edge after the header. */
+  .quote-table tbody tr:first-child td {
+    border-top: 0 !important;
+  }
+
+  /* No borders from summary/signature blocks. */
+  .total-box,
+  .total-box *,
+  .amount-words,
+  .quote-signature {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
+  }
+}
+</style>
+
+
+
+
+
+
+
+
+<style id="quotepro-v183-print-pc">
+/* V2.22:
+   Mobile print keeps the proven V1.79/V1.80-style edge ownership.
+   Desktop print gets a separate, deliberately simple collapsed table. */
+
+@media print and (min-width: 701px) {
+  html, body {
+    font-family: Roboto, Arial, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  header,
+  .tabs,
+  .bottom-nav,
+  .footer,
+  .no-print,
+  .actions,
+  .search,
+  .delete-col,
+  .toast-wrap,
+  .modal-backdrop,
+  .drag-handle,
+  .row-actions {
+    display: none !important;
+  }
+
+  .container,
+  #quotePrint,
+  .card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+
+  .table-wrap {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* PC: one simple collapsed-border table. */
+  .quote-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: 1px solid #666 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .quote-table th,
+  .quote-table td {
+    border: 1px solid #666 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    background: #fff !important;
+    font-family: Roboto, Arial, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+    vertical-align: middle !important;
+    padding: 5px 6px !important;
+  }
+
+  .quote-table th {
+    background: #f1f1f1 !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+  }
+
+  /* Hide the action column before the browser calculates the printed grid. */
+  .quote-table th:nth-child(7),
+  .quote-table td:nth-child(7),
+  .quote-table .delete-col {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  /* Stable six-column widths. */
+  .quote-table th:nth-child(1),
+  .quote-table td:nth-child(1) { width: 6% !important; text-align:center !important; }
+
+  .quote-table th:nth-child(2),
+  .quote-table td:nth-child(2) { width: 39% !important; text-align:left !important; }
+
+  .quote-table th:nth-child(3),
+  .quote-table td:nth-child(3) { width: 8% !important; text-align:center !important; }
+
+  .quote-table th:nth-child(4),
+  .quote-table td:nth-child(4) { width: 8% !important; text-align:center !important; }
+
+  .quote-table th:nth-child(5),
+  .quote-table td:nth-child(5) { width: 17% !important; text-align:right !important; }
+
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) { width: 22% !important; text-align:right !important; }
+
+  /* No special right border for Thành tiền: it is exactly the same
+     border declaration as every other cell. */
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) {
+    border-right: 1px solid #666 !important;
+  }
+
+  .quote-table tr {
+    page-break-inside: avoid !important;
+  }
+
+  .quote-table thead {
+    display: table-header-group !important;
+  }
+
+  .quote-table input,
+  .quote-table select,
+  .quote-table textarea {
+    border: 0 !important;
+    outline: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    font: inherit !important;
+    color: inherit !important;
+    box-sizing: border-box !important;
+  }
+
+  .total-box,
+  .total-box *,
+  .amount-words,
+  .quote-signature {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Mobile print: preserve the rendering strategy that was already working. */
+@media print and (max-width: 700px) {
+  .quote-table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 0 !important;
+  }
+
+  .quote-table th,
+  .quote-table td {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .quote-table th:first-child,
+  .quote-table td:first-child {
+    border-left: 1px solid #666 !important;
+  }
+
+  .quote-table th:not(:nth-child(7)),
+  .quote-table td:not(:nth-child(7)) {
+    border-right: 1px solid #666 !important;
+  }
+
+  .quote-table thead tr th {
+    border-top: 1px solid #666 !important;
+    border-bottom: 1px solid #666 !important;
+  }
+
+  .quote-table tbody tr td {
+    border-bottom: 1px solid #666 !important;
+  }
+}
+</style>
+
+<style id="quotepro-v227-textarea-safety">
+@media print{
+  /* Chiều cao đã được tính trước khi in; không cắt nội dung mô tả/chi tiết. */
+  .quote-table textarea.item-detail,
+  #price textarea.price-detail{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    overflow:visible !important;
+    white-space:pre-wrap !important;
+  }
+}
+</style>
+
+
+<style id="quotepro-v184-notes">
+/* Ghi chú / Điều khoản: editor is web-only; print block is print-only. */
+#printNotes {
+  display: none !important;
+}
+
+@media print {
+  #printNotes {
+    display: block !important;
+    width: 100% !important;
+    margin: 9px 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    font-family: Roboto, Arial, sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    color: #111 !important;
+    white-space: normal !important;
+    page-break-inside: avoid !important;
+  }
+
+  #printNotes .print-notes-title {
+    display: block !important;
+    margin: 0 0 3px !important;
+    padding: 0 !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    text-align: left !important;
+    border: 0 !important;
+  }
+
+  #printNotes .print-notes-content {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    text-align: left !important;
+    font-weight: 400 !important;
+    font-style: normal !important;
+  }
+
+  #printNotes:has(.print-notes-content:empty) {
+    display: none !important;
+  }
+
+  /* Never let notes create a table-like horizontal line. */
+  #printNotes,
+  #printNotes *,
+  #printNotes::before,
+  #printNotes::after {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}
+</style>
+
+
+<style id="quotepro-v184-notes-ui">
+#notes {
+  width: 100% !important;
+  min-height: 110px !important;
+  box-sizing: border-box !important;
+  resize: vertical !important;
+  line-height: 1.45 !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+}
+</style>
+
+
+<style id="quotepro-v185-table-compact">
+@media print {
+  /* Compact, even table rhythm without changing the border system. */
+  .quote-table th,
+  .quote-table td {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+    line-height: 1.22 !important;
+    vertical-align: middle !important;
+  }
+
+  .quote-table th {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Keep multi-line item names/description compact. */
+  .quote-table .item-detail {
+    margin-top: 1px !important;
+    line-height: 1.22 !important;
+  }
+
+  .quote-table input,
+  .quote-table select,
+  .quote-table textarea {
+    line-height: 1.22 !important;
+  }
+
+  /* Prevent inherited margins from creating uneven gaps near borders. */
+  .quote-table p,
+  .quote-table div {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+</style>
+
+
+<style id="quotepro-v186-page-number">
+@media print {
+  /* Footer page number is generated by the browser print engine. */
+  .print-page-number {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    @bottom-center {
+      content: "Trang " counter(page) " / " counter(pages);
+      font-family: Roboto, Arial, sans-serif;
+      font-size: 9px;
+      color: #555;
+    }
+  }
+}
+</style>
+
+
+<style id="quotepro-v187-border-clean">
+@media print and (min-width: 701px) {
+  /*
+   * Final PC border strategy:
+   * no table border + every printable cell gets the exact same border.
+   * This avoids border-conflict resolution on the outer/right edge.
+   */
+  .quote-table {
+    border: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    outline: 0 !important;
+  }
+
+  .quote-table th,
+  .quote-table td {
+    border: 0.75pt solid #666 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Remove any older special edge declarations. */
+  .quote-table th:first-child,
+  .quote-table td:first-child,
+  .quote-table th:last-child,
+  .quote-table td:last-child,
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) {
+    border: 0.75pt solid #666 !important;
+  }
+
+  /* Heading rows with colspan use exactly the same cell border. */
+  .quote-table .quote-heading td,
+  .quote-table .quote-subheading td {
+    border: 0.75pt solid #666 !important;
+  }
+
+  /* Keep hidden action cells completely out of the grid. */
+  .quote-table th:nth-child(7),
+  .quote-table td:nth-child(7),
+  .quote-table .delete-col {
+    display: none !important;
+    border: 0 !important;
+  }
+}
+</style>
+
+
+<style id="quotepro-v188-final-edge">
+@media print and (min-width: 701px) {
+  /* Make the print table's geometry deterministic. */
+  .table-wrap {
+    position: relative !important;
+    width: 100% !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  .quote-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    border: 0 !important;
+    outline: 0 !important;
+  }
+
+  /* Six printable columns total 100%. */
+  .quote-table th:nth-child(1),
+  .quote-table td:nth-child(1) { width: 6% !important; }
+  .quote-table th:nth-child(2),
+  .quote-table td:nth-child(2) { width: 39% !important; }
+  .quote-table th:nth-child(3),
+  .quote-table td:nth-child(3) { width: 8% !important; }
+  .quote-table th:nth-child(4),
+  .quote-table td:nth-child(4) { width: 8% !important; }
+  .quote-table th:nth-child(5),
+  .quote-table td:nth-child(5) { width: 17% !important; }
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) { width: 22% !important; }
+
+  /* Every cell has only the grid lines. The final outer edge is NOT
+     supplied by the last column. */
+  .quote-table th,
+  .quote-table td {
+    border: 0.75pt solid #666 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+
+  /* Remove the problematic outer-right border from Thành tiền. */
+  .quote-table th:nth-child(6),
+  .quote-table td:nth-child(6) {
+    border-right: 0 !important;
+  }
+
+  /* Remove the table's outer-left edge as well; wrapper supplies it. */
+  .quote-table th:first-child,
+  .quote-table td:first-child {
+    border-left: 0 !important;
+  }
+
+  /* One and only one outer-right line, positioned by the wrapper. */
+  .table-wrap::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 0 !important;
+    border-right: 0.75pt solid #666 !important;
+    pointer-events: none !important;
+    z-index: 20 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* One matching outer-left line. */
+  .table-wrap::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 0 !important;
+    border-left: 0.75pt solid #666 !important;
+    pointer-events: none !important;
+    z-index: 20 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Keep heading/subheading rows on the same grid. */
+  .quote-table .quote-heading td,
+  .quote-table .quote-subheading td {
+    border-top: 0.75pt solid #666 !important;
+    border-bottom: 0.75pt solid #666 !important;
+    border-right: 0 !important;
+  }
+
+  /* The action column is removed before the printable grid is rendered. */
+  .quote-table th:nth-child(7),
+  .quote-table td:nth-child(7),
+  .quote-table .delete-col {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+}
+
+/* V2.22: mở rộng ô Đơn vị trên web form */
+.field-unit {
+  grid-column: span 2;
+}
+.field-unit input,
+.field-unit select,
+.field-unit textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* V2.22: Bằng chữ trên web form căn trái */
+.amount-words,
+#amountWords,
+[data-field="amountWords"] {
+  text-align: left !important;
+}
+
+/* V2.22: bố cục form */
+.field-validity,
+.field-phone {
+  grid-column: span 1;
+}
+.field-validity input,
+.field-phone input,
+.field-validity select,
+.field-phone select {
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Không hiển thị ký hiệu thay thế khi thông tin chưa nhập */
+
+/* V2.22: bố cục thông tin báo giá */
+#qValidity { grid-column: 3; grid-row: 3; }
+.field-phone { grid-column: 4; grid-row: 3; }
+#address { grid-column: 1 / span 2; }
+#vat { grid-column: 4; grid-row: 4; }
+
+/* V2.22: thông tin chưa nhập để trống, không dùng placeholder cho quote form */
+#qNo::placeholder,
+#qProject::placeholder,
+#qDate::placeholder,
+#qValidity::placeholder,
+#qCreator::placeholder,
+#customer::placeholder,
+#company::placeholder,
+#address::placeholder,
+#phone::placeholder,
+#vat::placeholder {
+  color: transparent;
+}
+
+/* V2.22: Bằng chữ trên giao diện căn trái thực sự */
+.amount-words {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  text-align: left !important;
+}
+
+/* V2.22: logo PDF cao hơn một chút */
+
+/* V2.22: bố cục gọn khu vực Thông tin công ty */
+.company-card > .grid {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.company-card #sellerName { grid-column: 1 / span 3; }
+.company-card #sellerTax { grid-column: 4; }
+
+.company-card #sellerAddress { grid-column: 1 / span 2; }
+.company-card #sellerEmail { grid-column: 3; }
+.company-card #sellerWebsite { grid-column: 4; }
+
+.company-card #sellerBank { grid-column: 1 / span 3; }
+.company-card #sellerPhone { grid-column: 4; }
+
+.company-card .logo-field {
+  grid-column: 1 / -1;
+}
+
+.company-card .logo-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+}
+
+.company-card .logo-preview {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-left: 0;
+}
+
+.company-card .hint {
+  display: block;
+  margin-top: 6px;
+}
+
+/* V2.22: Số điện thoại thẳng cột với Email */
+.company-card > .grid {
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.company-card #sellerName { grid-column: 1 / span 3; }
+.company-card #sellerTax { grid-column: 4; }
+
+.company-card #sellerAddress { grid-column: 1 / span 2; }
+.company-card #sellerEmail { grid-column: 3; }
+.company-card #sellerWebsite { grid-column: 4; }
+
+.company-card #sellerBank { grid-column: 1 / span 2; }
+.company-card #sellerPhone { grid-column: 3; }
+
+.company-card .logo-field {
+  grid-column: 1 / -1;
+}
+
+/* V2.22: bố trí chính xác, Số điện thoại thẳng cột Email */
+.company-card .company-info-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto auto;
+  column-gap: 12px;
+  row-gap: 12px;
+  align-items: start;
+}
+.company-card .company-name { grid-column: 1 / 4; grid-row: 1; }
+.company-card .company-tax { grid-column: 4; grid-row: 1; }
+.company-card .company-address { grid-column: 1 / 3; grid-row: 2; }
+.company-card .company-email { grid-column: 3; grid-row: 2; }
+.company-card .company-website { grid-column: 4; grid-row: 2; }
+.company-card .company-bank { grid-column: 1 / 3; grid-row: 3; }
+.company-card .company-phone { grid-column: 3; grid-row: 3; }
+.company-card .logo-field { grid-column: 1 / -1; grid-row: 4; }
+
+/* V2.22: bố cục thông tin báo giá */
+#quoteInfoGrid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+  align-items:start;
+}
+#quoteInfoGrid .field-validity { grid-column:3; grid-row:3; }
+#quoteInfoGrid .field-phone { grid-column:4; grid-row:3; }
+#quoteInfoGrid .field-address { grid-column:1 / span 2; grid-row:3; }
+#quoteInfoGrid .field-vat { grid-column:4; grid-row:4; }
+
+/* V2.22: sửa responsive mobile cho các grid đã có layout desktop cố định */
+@media (max-width: 800px) {
+  .company-card .company-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto !important;
+  }
+  .company-card .company-name,
+  .company-card .company-address,
+  .company-card .company-bank {
+    grid-column: 1 / -1 !important;
+  }
+  .company-card .company-tax,
+  .company-card .company-email,
+  .company-card .company-website,
+  .company-card .company-phone {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  .company-card .logo-field {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  #quoteInfoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto !important;
+  }
+  #quoteInfoGrid .field,
+  #quoteInfoGrid .field-validity,
+  #quoteInfoGrid .field-phone,
+  #quoteInfoGrid .field-address,
+  #quoteInfoGrid .field-vat {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  #quoteInfoGrid .field-address {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .company-card .company-info-grid,
+  #quoteInfoGrid {
+    grid-template-columns: 1fr !important;
+  }
+  .company-card .company-name,
+  .company-card .company-tax,
+  .company-card .company-address,
+  .company-card .company-email,
+  .company-card .company-website,
+  .company-card .company-bank,
+  .company-card .company-phone,
+  .company-card .logo-field,
+  #quoteInfoGrid .field,
+  #quoteInfoGrid .field-validity,
+  #quoteInfoGrid .field-phone,
+  #quoteInfoGrid .field-address,
+  #quoteInfoGrid .field-vat {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .company-card .field label,
+  #quoteInfoGrid .field label {
+    white-space: normal;
+  }
+
+  .company-card .logo-picker {
+    flex-wrap: wrap;
+  }
+}
+
+/* V2.22: bố trí chính thức Thông tin công ty theo mẫu đã duyệt
+   Hàng 1: Tên công ty | Mã số thuế | Số điện thoại
+   Hàng 2: Địa chỉ     | Email       | Website
+   Hàng 3: Ngân hàng   | Logo công ty| (trống)
+*/
+.company-card .company-info-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr !important;
+  grid-template-rows: auto auto auto !important;
+  column-gap: 12px !important;
+  row-gap: 12px !important;
+  align-items: start !important;
+}
+
+.company-card .company-name {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+.company-card .company-tax {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+.company-card .company-phone {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+.company-card .company-address {
+  grid-column: 1 !important;
+  grid-row: 2 !important;
+}
+.company-card .company-email {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+}
+.company-card .company-website {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+}
+.company-card .company-bank {
+  grid-column: 1 !important;
+  grid-row: 3 !important;
+}
+.company-card .logo-field {
+  grid-column: 2 !important;
+  grid-row: 3 !important;
+  width: 100% !important;
+}
+
+.company-card .logo-picker {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  min-height: 58px !important;
+}
+.company-card .logo-preview {
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: contain !important;
+  margin-left: 0 !important;
+}
+.company-card .logo-field .hint {
+  display: block !important;
+  margin-top: 6px !important;
+}
+
+/* Responsive: không để bố cục desktop ép vào màn hình nhỏ */
+@media (max-width: 800px) {
+  .company-card .company-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto !important;
+  }
+  .company-card .company-name,
+  .company-card .company-tax,
+  .company-card .company-phone,
+  .company-card .company-address,
+  .company-card .company-email,
+  .company-card .company-website,
+  .company-card .company-bank,
+  .company-card .logo-field {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+  .company-card .company-name,
+  .company-card .company-address,
+  .company-card .company-bank {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .company-card .company-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .company-card .company-name,
+  .company-card .company-tax,
+  .company-card .company-phone,
+  .company-card .company-address,
+  .company-card .company-email,
+  .company-card .company-website,
+  .company-card .company-bank,
+  .company-card .logo-field {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+}
+
+/* V2.22: Bottom taskbar lấy cảm hứng từ dock WWTC — nổi, gọn, dễ bấm */
+.bottom-nav {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: 14px !important;
+  transform: translateX(-50%) !important;
+  width: min(430px, calc(100vw - 28px)) !important;
+  height: 58px !important;
+  padding: 6px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  background: rgba(255,255,255,.96) !important;
+  border: 1px solid #dfe9e3 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(20,55,39,.14) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  z-index: 1000 !important;
+}
+
+.bottom-tab {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: #52635a !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  transition: background .18s ease, color .18s ease, transform .12s ease !important;
+}
+
+.bottom-tab span {
+  flex: 0 0 auto !important;
+  font-size: 19px !important;
+  line-height: 1 !important;
+}
+
+.bottom-tab b {
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+.bottom-tab:hover {
+  background: #eef7f2 !important;
+  color: #176a49 !important;
+}
+
+.bottom-tab:active {
+  transform: scale(.98) !important;
+}
+
+.bottom-tab.active {
+  background: #e5f5ed !important;
+  color: #13724d !important;
+  font-weight: 800 !important;
+  box-shadow: inset 0 0 0 1px rgba(24,138,87,.08) !important;
+}
+
+body {
+  padding-bottom: 88px !important;
+}
+
+@media (max-width: 700px) {
+  .bottom-nav {
+    bottom: 10px !important;
+    width: min(390px, calc(100vw - 20px)) !important;
+    height: 56px !important;
+    padding: 5px !important;
+    gap: 5px !important;
+    border-radius: 15px !important;
+  }
+  .bottom-tab {
+    height: 44px !important;
+    font-size: 11.5px !important;
+    gap: 6px !important;
+    padding: 0 8px !important;
+  }
+  .bottom-tab span {
+    font-size: 18px !important;
+  }
+  .bottom-tab b {
+    font-size: 11.5px !important;
+  }
+}
+
+/* V2.22 - Gọn cụm nút chỉnh sửa/xóa trên hạng mục, không làm tăng chiều cao dòng */
+@media screen {
+  .quote-table td.delete-col {
+    display: table-cell !important;
+    width: 62px !important;
+    min-width: 62px !important;
+    max-width: 62px !important;
+    padding: 3px 2px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
+  }
+
+  .quote-table td.delete-col .quote-edit-btn,
+  .quote-table td.delete-col .btn-danger {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+    box-sizing: border-box !important;
+    width: 27px !important;
+    height: 30px !important;
+    min-width: 27px !important;
+    min-height: 30px !important;
+    max-width: 27px !important;
+    max-height: 30px !important;
+    padding: 0 !important;
+    margin: 0 1px !important;
+    border-radius: 8px !important;
+    line-height: 1 !important;
+  }
+
+  .quote-table td.delete-col .quote-edit-btn {
+    font-size: 13px !important;
+  }
+
+  .quote-table td.delete-col .btn-danger {
+    font-size: 16px !important;
+  }
+}
+
+/* V2.22 - Cụm nút Mở/Xóa báo giá đã lưu */
+@media screen {
+  .saved-quote-actions{
+    display:inline-flex !important;
+    flex:0 0 auto !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:4px !important;
+    white-space:nowrap !important;
+  }
+  .saved-quote-actions .btn-light,
+  .saved-quote-actions .btn-danger{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    box-sizing:border-box !important;
+    width:58px !important;
+    min-width:58px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 !important;
+    margin:0 !important;
+    border-radius:9px !important;
+    line-height:1 !important;
+  }
+  @media(max-width:600px){
+    .saved-quote-actions .btn-light,
+    .saved-quote-actions .btn-danger{
+      width:58px !important;
+      min-width:58px !important;
+      height:34px !important;
+      min-height:34px !important;
+    }
+  }
+}
+
+/* V2.22 - Nhóm điều khiển giảm giá liền nhau */
+@media screen and (min-width: 801px) {
+  #quoteInfoGrid .discount-settings {
+    grid-column: 1 !important;
+    grid-row: 4 !important;
+  }
+  #quoteInfoGrid #discountTypeField {
+    grid-column: 2 !important;
+    grid-row: 4 !important;
+  }
+  #quoteInfoGrid #discountValueField {
+    grid-column: 3 !important;
+    grid-row: 4 !important;
+  }
+  #quoteInfoGrid .field-vat {
+    grid-column: 4 !important;
+    grid-row: 4 !important;
+  }
+
+  #quoteInfoGrid .discount-settings .discount-toggle {
+    margin-top: 2px !important;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  #quoteInfoGrid .discount-settings,
+  #quoteInfoGrid #discountTypeField,
+  #quoteInfoGrid #discountValueField,
+  #quoteInfoGrid .field-vat {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  #quoteInfoGrid .discount-settings,
+  #quoteInfoGrid #discountTypeField,
+  #quoteInfoGrid #discountValueField,
+  #quoteInfoGrid .field-vat {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+}
+
+/* V2.22 - Trên mobile giữ nhóm giảm giá liền nhau, VAT đặt sau nhóm */
+@media screen and (max-width: 480px) {
+  #quoteInfoGrid .discount-settings { order: 10 !important; }
+  #quoteInfoGrid #discountTypeField { order: 11 !important; }
+  #quoteInfoGrid #discountValueField { order: 12 !important; }
+  #quoteInfoGrid .field-vat { order: 13 !important; }
+}
+
+/* V2.22 - VAT đặt ngay sau Đơn vị */
+@media screen and (min-width: 801px) {
+  #quoteInfoGrid .field-vat {
+    grid-column: 4 !important;
+    grid-row: 2 !important;
+  }
+  #quoteInfoGrid .discount-settings {
+    grid-column: 1 !important;
+    grid-row: 4 !important;
+  }
+  #quoteInfoGrid #discountTypeField {
+    grid-column: 2 !important;
+    grid-row: 4 !important;
+  }
+  #quoteInfoGrid #discountValueField {
+    grid-column: 3 !important;
+    grid-row: 4 !important;
+  }
+}
+
+/* V2.22 - Mobile: Đơn vị → VAT; Giảm giá ở cuối */
+@media screen and (max-width: 480px) {
+  #quoteInfoGrid > .field {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+  #quoteInfoGrid > .field#qNo { order: 1 !important; }
+  #quoteInfoGrid > .field#qProject { order: 2 !important; }
+  #quoteInfoGrid > .field#qDate { order: 3 !important; }
+  #quoteInfoGrid > .field#qCreator { order: 4 !important; }
+  #quoteInfoGrid > .field#customer { order: 5 !important; }
+  #quoteInfoGrid > .field#company { order: 6 !important; }
+  #quoteInfoGrid > .field#vat { order: 7 !important; }
+  #quoteInfoGrid > .field#address { order: 8 !important; }
+  #quoteInfoGrid > .field#qValidity { order: 9 !important; }
+  #quoteInfoGrid > .field#phone { order: 10 !important; }
+  #quoteInfoGrid > .discount-settings { order: 11 !important; }
+  #quoteInfoGrid > #discountTypeField { order: 12 !important; }
+  #quoteInfoGrid > #discountValueField { order: 13 !important; }
+}
+
+/* V2.22 - Sửa thứ tự mobile theo đúng nhóm thông tin */
+@media screen and (max-width: 480px) {
+  #quoteInfoGrid > .field:has(#qNo) { order: 1 !important; }
+  #quoteInfoGrid > .field:has(#qProject) { order: 2 !important; }
+  #quoteInfoGrid > .field:has(#qDate) { order: 3 !important; }
+  #quoteInfoGrid > .field:has(#qCreator) { order: 4 !important; }
+  #quoteInfoGrid > .field:has(#customer) { order: 5 !important; }
+  #quoteInfoGrid > .field:has(#company) { order: 6 !important; }
+  #quoteInfoGrid > .field:has(#vat) { order: 7 !important; }
+  #quoteInfoGrid > .field:has(#address) { order: 8 !important; }
+  #quoteInfoGrid > .field:has(#qValidity) { order: 9 !important; }
+  #quoteInfoGrid > .field:has(#phone) { order: 10 !important; }
+  #quoteInfoGrid > .discount-settings { order: 11 !important; }
+  #quoteInfoGrid > #discountTypeField { order: 12 !important; }
+  #quoteInfoGrid > #discountValueField { order: 13 !important; }
+}
+
+/* V2.22 - Popup luôn nổi trên taskbar mobile */
+.modal-backdrop {
+  z-index: 3000 !important;
+}
+
+/* V2.22 - Micro-interactions: mềm mại, nhẹ, không gây rối */
+@media screen {
+  /* Nút bấm */
+  button,
+  .btn,
+  .btn-light,
+  .btn-danger,
+  .quote-edit-btn,
+  .modal-close,
+  .file-menu-btn {
+    transition:
+      transform .16s ease,
+      box-shadow .16s ease,
+      background-color .16s ease,
+      border-color .16s ease,
+      color .16s ease,
+      opacity .16s ease;
+  }
+
+  button:hover,
+  .btn:hover,
+  .btn-light:hover,
+  .btn-danger:hover,
+  .quote-edit-btn:hover,
+  .modal-close:hover,
+  .file-menu-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active,
+  .btn:active,
+  .btn-light:active,
+  .btn-danger:active,
+  .quote-edit-btn:active,
+  .modal-close:active,
+  .file-menu-btn:active {
+    transform: translateY(0) scale(.98);
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid rgba(22, 139, 98, .28);
+    outline-offset: 2px;
+  }
+
+  /* Ô nhập liệu: focus nhẹ, không nhảy layout */
+  input,
+  select,
+  textarea {
+    transition:
+      border-color .18s ease,
+      box-shadow .18s ease,
+      background-color .18s ease;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    box-shadow: 0 0 0 3px rgba(22, 139, 98, .08);
+  }
+
+  /* Thẻ / khu vực nội dung */
+  .card,
+  .panel,
+  .quote-card,
+  .price-card {
+    transition: box-shadow .2s ease, border-color .2s ease;
+  }
+
+  /* Popup xuất hiện mềm hơn */
+  .modal-backdrop {
+    transition: opacity .18s ease;
+  }
+
+  .modal-backdrop.open .modal {
+    animation: qpModalIn .20s ease-out both;
+  }
+
+  @keyframes qpModalIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Toast */
+  .toast {
+    animation: qpToastIn .22s ease-out both;
+  }
+
+  @keyframes qpToastIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Nút bật/tắt giảm giá */
+  .discount-toggle,
+  .switch,
+  .toggle {
+    transition: background-color .18s ease, box-shadow .18s ease;
+  }
+
+  /* Taskbar dưới mobile */
+  .bottom-nav {
+    transition: box-shadow .2s ease, transform .2s ease;
+  }
+
+  @media (max-width: 480px) {
+    .bottom-nav button:active,
+    .bottom-nav .nav-item:active {
+      transform: scale(.97);
+    }
+  }
+}
+
+/* Không áp dụng animation khi in */
+@media print {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* V2.23 - Gom thao tác xóa toàn bộ vào nút Thêm */
+.add-price-menu{position:relative;display:flex;align-items:stretch}
+.add-price-main{border-top-right-radius:0!important;border-bottom-right-radius:0!important}
+.add-price-toggle{min-width:34px!important;padding:0 9px!important;border-left:1px solid rgba(255,255,255,.45)!important;border-top-left-radius:0!important;border-bottom-left-radius:0!important}
+@media(max-width:700px){
+ .add-price-main{flex:1}
+ .add-price-toggle{width:auto!important}
+ }
+</style>
+
+
+<!-- QuotePro V2.25: PDF export engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.12/vfs_fonts.js"></script>
+
+</head>
+<body>
+<header>
+ <div class="header-row">
+  <div class="brand-block">
+   <div class="brand">Quản lý &amp; tạo báo giá</div>
+  </div>
+  <div class="file-menu-wrap no-print">
+   <button type="button" class="file-menu-btn" onclick="toggleFileMenu(event)">☰ <span>Tệp</span></button>
+   <div id="fileMenu" class="file-menu">
+    <button type="button" onclick="fileAction('importQuote')">↓&nbsp; Nhập báo giá</button>
+    <button type="button" onclick="fileAction('exportQuote')">↑&nbsp; Xuất báo giá</button>
+    <div class="file-separator"></div>
+    <button type="button" onclick="fileAction('importPrice')">↓&nbsp; Nhập giá</button>
+    <button type="button" onclick="fileAction('exportPrice')">↑&nbsp; Xuất giá</button>
+    <div class="file-separator"></div>
+    <button type="button" class="file-menu-danger" onclick="fileAction('clearPrices')">🗑&nbsp; Xóa toàn bộ đơn giá</button>
+   </div>
+  </div>
+ </div>
+ <input id="quoteJsonFile" type="file" accept=".json" style="display:none" onchange="importQuotesJSON(event)">
+ <input id="priceJsonFile" type="file" accept=".json" style="display:none" onchange="importPricesJSON(event)">
+</header>
+
+<div class="container">
+ 
+
+ <section id="quote">
+  <div class="card no-print company-card">
+   <h2>Thông tin công ty</h2>
+   <div class="grid company-info-grid">
+    <div class="field company-name"><label>Tên công ty</label><input id="sellerName" placeholder="CÔNG TY TNHH ..."></div>
+    <div class="field company-tax"><label>Mã số thuế</label><input id="sellerTax" placeholder=""></div>
+
+    <div class="field company-address"><label>Địa chỉ</label><input id="sellerAddress" placeholder=""></div>
+    <div class="field company-email"><label>Email</label><input id="sellerEmail" placeholder=""></div>
+    <div class="field company-website"><label>Website</label><input id="sellerWebsite" placeholder=""></div>
+
+    <div class="field company-bank"><label>Thông tin ngân hàng</label><input id="sellerBank" placeholder="Ngân hàng, số tài khoản, chủ tài khoản..."></div>
+    <div class="field company-phone"><label>Số điện thoại</label><input id="sellerPhone" placeholder=""></div>
+
+    <div class="field wide logo-field"><label>Logo công ty</label><div class="logo-picker"><input id="sellerLogo" type="file" accept="image/png,image/jpeg,image/webp" onchange="handleLogoUpload(event)"><button type="button" class="btn-light" onclick="document.getElementById('sellerLogo').click()">📷 Chọn logo</button><button type="button" class="btn-light" id="removeLogoBtn" onclick="removeCompanyLogo()" style="display:none">Xóa logo</button><img id="logoPreview" class="logo-preview" alt="Logo công ty"></div><small class="hint">Logo sẽ được lưu cùng dữ liệu công ty và xuất hiện trên bản in.</small></div>
+  </div>
+  </div>
+
+  <div class="card no-print">
+   <h2>Thông tin báo giá</h2>
+   <div class="grid" id="quoteInfoGrid">
+    <div class="field"><label>Số báo giá</label><input id="qNo"></div>
+    <div class="field"><label>Dự án</label><input id="qProject"></div>
+    <div class="field"><label>Ngày</label><input id="qDate" type="date"></div>
+    <div class="field field-validity"><label>Thời hạn báo giá</label><input id="qValidity"></div>
+    <div class="field"><label>Người lập</label><input id="qCreator"></div>
+    <div class="field"><label>Khách hàng</label><input id="customer"></div>
+    <div class="field field-unit"><label>Đơn vị</label><input id="company"></div>
+    <div class="field wide field-address"><label>Địa chỉ</label><input id="address"></div>
+    <div class="field field-phone"><label>Số điện thoại</label><input id="phone"></div>
+    <div class="field field-vat"><label>VAT (%)</label><input id="vat" type="text" class="comma-decimal" inputmode="decimal" autocomplete="off" value="10" oninput="normalizeCommaDecimal(this)" onchange="this.value=formatDecimalInput(parseDecimalInput(this.value));db.currentQuote.vat=parseDecimalInput(this.value);saveDB();renderQuote()"></div>
+    <div class="field discount-settings"><label>Giảm giá</label><div class="discount-toggle"><label class="switch"><input id="discountEnabled" type="checkbox" onchange="toggleDiscount()"><span class="slider"></span></label><span>Áp dụng giảm giá</span></div></div>
+    <div class="field" id="discountTypeField" style="display:none"><label>Kiểu giảm</label><select id="discountType" onchange="changeDiscountType(this.value)"><option value="percent">Theo %</option><option value="amount">Theo số tiền</option></select></div>
+    <div class="field" id="discountValueField" style="display:none"><label id="discountValueLabel">Giảm (%)</label><input id="discountValue" type="text" class="comma-decimal" inputmode="decimal" autocomplete="off" placeholder="0" oninput="normalizeCommaDecimal(this)" onchange="changeDiscountValue(this.value)"></div>
+   </div>
+  </div>
+
+  <div class="card" id="quotePrint">
+   <div class="actions no-print quote-actions" style="margin-bottom:12px">
+ <button type="button" class="btn" onclick="addQuoteRow()">+ Hạng mục</button>
+ <button type="button" class="btn-light" onclick="addQuoteHeading()">+ Đề mục A/B/C</button>
+ <button type="button" class="btn-light" onclick="addQuoteSubheading()">+ Tiêu đề phụ</button>
+ <button type="button" class="btn-light" onclick="saveQuote()">💾 Lưu</button>
+ <button type="button" class="btn-light" onclick="updatePricesFromCurrent()">🔄 Giá mới</button>
+ <button type="button" class="btn-light" onclick="generateQuotePDF()">🖨 In</button>
+ <button type="button" class="btn-light" onclick="newQuote()">＋ Mới</button>
+</div>
+   <div class="seller-print" id="sellerPrint">
+ <div class="seller-print-inner"><div class="print-logo-wrap"><img id="printSellerLogo" class="print-company-logo" alt="Logo công ty"></div><div class="seller-print-text"><div class="print-company-name" id="printSellerName"></div>
+ <div id="printSellerAddress"></div>
+ <div id="printSellerContact"></div>
+ <div id="printSellerBank"></div></div></div>
+</div>
+<div class="print-quote-info">
+ <div class="print-title">BẢNG BÁO GIÁ</div>
+ <div class="print-info-grid">
+  <div><b>Số báo giá:</b> <span id="printQuoteNo"></span></div>
+  <div><b>Ngày:</b> <span id="printQuoteDate"></span></div>
+  <div class="print-customer-wide"><b>Dự án:</b> <span id="printQuoteProject"></span></div>
+  <div><b>Thời hạn:</b> <span id="printQuoteValidity"></span></div>
+  <div><b>Người lập:</b> <span id="printQuoteCreator"></span></div>
+  <div class="print-customer-wide"><b>Kính gửi:</b> <span id="printCustomer"></span></div>
+  <div><b>Công ty:</b> <span id="printCustomerCompany"></span></div>
+  <div><b>Địa chỉ:</b> <span id="printCustomerAddress"></span></div>
+  <div><b>Điện thoại:</b> <span id="printCustomerPhone"></span></div>
+ </div>
+</div>
+<div class="print-intro">Cảm ơn Quý Khách hàng đã tin tưởng, theo yêu cầu Công ty chúng tôi xin báo giá chi tiết như sau:</div>
+<h2 class="no-print" style="text-align:center">BẢNG BÁO GIÁ</h2>
+   <div class="small no-print" id="quoteMeta"></div>
+   <div id="priceUpdateStatus" class="small no-print" style="margin-top:7px"></div>
+   <div class="table-wrap" style="margin-top:10px">
+    <table class="quote-table">
+     <thead><tr><th style="width:55px">STT</th><th>Hạng mục / đề mục</th><th style="width:85px">ĐVT</th><th class="num" style="width:75px">SL</th><th class="num" style="width:120px">Đơn giá</th><th class="num" style="width:130px">Thành tiền</th><th class="delete-col" style="width:55px"></th></tr></thead>
+     <tbody id="quoteRows"></tbody>
+    </table>
+   </div>
+   <div class="total-box">
+    <div class="total-row"><span>Tạm tính</span><strong id="subtotal">0 đ</strong></div>
+    <div class="total-row" id="discountRow" style="display:none"><span id="discountLabel">Giảm giá</span><strong id="discountAmount">0 đ</strong></div>
+    <div class="total-row"><span id="vatLabel">VAT (10%)</span><strong id="vatAmount">0 đ</strong></div>
+    <div class="total-row final"><span>TỔNG THANH TOÁN</span><strong id="grandTotal">0 đ</strong></div>
+   </div>
+   <div class="amount-words"><b>Bằng chữ:</b> <span id="grandTotalWords">Không đồng</span></div>
+   <div class="field no-print" style="margin-top:18px"><label>Ghi chú / Điều khoản</label><textarea id="notes" class="notes-auto-grow" placeholder="Thời gian giao hàng, điều kiện thanh toán..." oninput="autoGrowTextarea(this)"></textarea></div>
+   <div class="print-notes" id="printNotes" aria-hidden="true"><div class="print-notes-title">Ghi chú / Điều khoản</div><div class="print-notes-content" id="printNotesContent"></div></div>
+   <div class="quote-signature">
+    <div class="signature-box">
+     <div class="signature-title">NGƯỜI LẬP BÁO GIÁ</div>
+     <div class="signature-note">(Ký, ghi rõ họ tên)</div>
+     <div class="signature-space"></div>
+     <div class="signature-name" id="printSignatureName"></div>
+    </div>
+   </div>
+  </div>
+
+  <div class="card no-print">
+   <h3>Báo giá đã lưu</h3>
+   <div id="savedQuotes" class="small">Chưa có báo giá đã lưu.</div>
+  </div>
+ </section>
+
+ <section id="price" style="display:none">
+  <div class="card">
+   <h2>Thiết lập giá bán theo hạng mục</h2>
+   <div class="small">Mỗi hạng mục có hệ số lợi nhuận riêng. Giá bán = Giá vốn × Hệ số lợi nhuận.</div>
+   </div>
+  <div class="card">
+   <h2>Danh mục hạng mục & đơn giá</h2>
+   <div class="actions price-actions">
+    <button type="button" class="btn" onclick="addPrice()">+ Thêm hạng mục</button>
+    <button type="button" id="savePricesBtn" class="btn" onclick="savePriceChanges()">💾 Lưu cập nhật giá</button>
+    <span id="priceSaveStatus" class="price-update-status">Đã lưu</span>
+    <input id="priceSearch" class="search" placeholder="Tìm kiếm hạng mục..." oninput="renderPrices()">
+   </div>
+   <div class="table-wrap">
+    <table>
+     <thead><tr><th>Mã</th><th>Tên hạng mục</th><th>Chi tiết hạng mục</th><th>ĐVT</th><th class="num">Giá vốn</th><th class="num">Hệ số lợi nhuận</th><th class="num">Giá bán</th><th>Nhóm</th><th class="delete-col"></th></tr></thead>
+     <tbody id="priceRows"></tbody>
+    </table>
+   </div>
+   <p class="small" style="margin-bottom:0">Đơn giá tại đây là giá nguồn cho báo giá mới. Khi thêm hạng mục vào báo giá, đơn giá được lưu cố định trong báo giá đó; thay đổi bảng giá sau này không làm thay đổi báo giá cũ.</p>
+  </div>
+ </section>
+</div>
+<nav class="bottom-nav no-print">
+ <button type="button" id="navQuote" class="bottom-tab active" onclick="showTab('quote')"><span>📄</span><b>Tạo báo giá</b></button>
+ <button type="button" id="navPrice" class="bottom-tab" onclick="showTab('price')"><span>💰</span><b>Cập nhật giá</b></button>
+</nav>
+<div class="footer">Dữ liệu được lưu trên trình duyệt (Local Storage). Nên xuất dữ liệu định kỳ để sao lưu.</div>
+
+
+<div id="pricePickerBackdrop" class="modal-backdrop no-print" onclick="closePricePicker(event)">
+ <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pricePickerTitle" onclick="event.stopPropagation()">
+  <div class="modal-head"><div class="modal-title" id="pricePickerTitle">Chọn hạng mục áp giá</div><button class="modal-close" type="button" onclick="closePricePicker()">×</button></div>
+  <div class="modal-search"><input id="pricePickerSearch" autocomplete="off" placeholder="Tìm theo tên, mã, nhóm hoặc chi tiết..." oninput="renderPricePicker()"></div>
+  <div id="pricePickerList" class="picker-list"></div>
+ </div>
+</div>
+<div id="noticeBackdrop" class="modal-backdrop no-print" onclick="closeNotice(event)">
+ <div class="modal" style="max-width:430px" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+  <div class="modal-head"><div class="modal-title" id="noticeTitle">Thông báo</div><button class="modal-close" type="button" onclick="closeNotice()">×</button></div>
+  <div id="noticeMessage" style="padding:18px 16px;line-height:1.55;font-size:14px"></div>
+  <div class="confirm-actions" id="noticeActions"><button class="btn-light" type="button" onclick="closeNotice()">Đóng</button></div>
+ </div>
+</div>
+<div id="toastWrap" class="toast-wrap"></div>
+<script>
+const KEY='quotepro_v1';
+let db={prices:[],quotes:[],currentQuote:null,company:{name:'',tax:'',phone:'',address:'',email:'',website:'',bank:'',logo:''}};
+
+let activePickerRowId=null;
+let noticeResolver=null;
+function showToast(message,type='success'){
+ const wrap=document.getElementById('toastWrap'); if(!wrap)return;
+ const el=document.createElement('div'); el.className='toast'+(type==='error'?' error':''); el.textContent=message; wrap.appendChild(el);
+ setTimeout(()=>el.remove(),2800);
+}
+function showNotice(title,message,buttons){
+ const b=document.getElementById('noticeBackdrop'),t=document.getElementById('noticeTitle'),m=document.getElementById('noticeMessage'),a=document.getElementById('noticeActions');
+ if(!b)return Promise.resolve(true);
+ t.textContent=title||'Thông báo';m.textContent=message||'';a.innerHTML='';
+ (buttons||[{label:'Đóng',value:true,cls:'btn-light'}]).forEach(x=>{
+  const btn=document.createElement('button');btn.type='button';btn.className=x.cls||'btn-light';btn.textContent=x.label;
+  btn.onclick=()=>{
+   const r=noticeResolver; noticeResolver=null;
+   b.classList.remove('open');
+   if(r) r(x.value);
+  };
+  a.appendChild(btn);
+ });
+ b.classList.add('open');return new Promise(resolve=>{noticeResolver=resolve});
+}
+function closeNotice(e){
+ if(e&&e.target!==e.currentTarget)return;
+ const b=document.getElementById('noticeBackdrop');if(b)b.classList.remove('open');
+ if(noticeResolver){const r=noticeResolver;noticeResolver=null;r(false)}
+}
+function openPricePicker(rowId){
+ activePickerRowId=rowId;const b=document.getElementById('pricePickerBackdrop'),s=document.getElementById('pricePickerSearch');
+ if(!b)return;b.classList.add('open');if(s){s.value='';renderPricePicker();setTimeout(()=>s.focus(),50)}
+}
+function closePricePicker(e){if(e&&e.target!==e.currentTarget)return;const b=document.getElementById('pricePickerBackdrop');if(b)b.classList.remove('open');activePickerRowId=null}
+function renderPricePicker(){
+ const list=document.getElementById('pricePickerList');if(!list)return;
+ const term=(document.getElementById('pricePickerSearch')?.value||'').trim().toLowerCase();
+ const arr=db.prices.filter(p=>(`${p.code||''} ${p.name||''} ${p.group||''} ${p.detail||''}`).toLowerCase().includes(term));
+ if(!arr.length){list.innerHTML='<div class="picker-empty">Không tìm thấy hạng mục phù hợp.</div>';return}
+ list.innerHTML=arr.map(p=>`<div class="picker-item" tabindex="0" onclick="selectPricePicker('${p.id}')" onkeydown="if(event.key==='Enter')selectPricePicker('${p.id}')">
+  <div class="picker-main"><div class="picker-name">${esc(p.name||'Chưa đặt tên')}</div><div class="picker-meta">${esc(p.code||'')} · ${esc(p.group||'')} · ĐVT: ${esc(p.unit||'')}</div>${p.detail?`<div class="picker-detail">${esc(p.detail)}</div>`:''}</div>
+  <div class="picker-price">${money(p.price)}</div>
+ </div>`).join('');
+}
+function selectPricePicker(priceId){
+ if(!activePickerRowId)return;changeQuoteRow(activePickerRowId,'priceId',priceId);closePricePicker();showToast('Đã chọn hạng mục áp giá.');
+}
+
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function money(n){return new Intl.NumberFormat('vi-VN').format(Math.round(Number(n)||0))+' đ'}
+function formatMoneyInput(n){
+ const x=Number(n);
+ if(!Number.isFinite(x)) return '';
+ return new Intl.NumberFormat('vi-VN',{minimumFractionDigits:0,maximumFractionDigits:2}).format(x);
+}
+// Chuẩn tiền Việt Nam dùng thống nhất toàn app:
+// dấu . = phân cách hàng nghìn, dấu , = phần thập phân.
+function parseMoneyInput(v){
+ let s=String(v??'').trim().replace(/\s/g,'');
+ if(!s) return 0;
+ // Loại bỏ ký hiệu tiền và ký tự không hợp lệ, giữ . và ,
+ s=s.replace(/[^0-9.,-]/g,'');
+ // Theo chuẩn VN: nếu có dấu phẩy thì đó là dấu thập phân;
+ // mọi dấu chấm phía trước là phân cách hàng nghìn.
+ if(s.includes(',')){
+   const comma=s.lastIndexOf(',');
+   const sign=s.startsWith('-')?'-':'';
+   const body=s.replace(/-/g,'');
+   const parts=body.split(',');
+   const intPart=parts.slice(0,-1).join('').replace(/\./g,'').replace(/\D/g,'') || '0';
+   const decPart=(parts[parts.length-1]||'').replace(/\D/g,'').slice(0,2);
+   const normalized=sign+intPart+(decPart?'.'+decPart:'');
+   const n=Number(normalized);
+   return Number.isFinite(n)?n:0;
+ }
+ // Không có dấu phẩy: tất cả dấu . là phân cách hàng nghìn.
+ const normalized=s.replace(/\./g,'').replace(/(?!^)-/g,'').replace(/[^0-9-]/g,'');
+ const n=Number(normalized);
+ return Number.isFinite(n)?n:0;
+}
+function formatMoneyField(el){
+ if(!el)return;
+ const n=parseMoneyInput(el.value);
+ el.value=formatMoneyInput(n);
+}
+// Live formatting theo đúng quy chuẩn Việt Nam.
+// Người dùng có thể gõ 100000 hoặc 100.000; dấu . luôn là hàng nghìn,
+// dấu , mới là thập phân. Ví dụ 1250000,5 -> 1.250.000,5.
+function formatMoneyLive(el){
+ if(!el)return;
+ const old=String(el.value||'');
+ const caret=typeof el.selectionStart==='number'?el.selectionStart:old.length;
+ const before=old.slice(0,caret);
+ const hasComma=old.includes(',');
+ const commaIndex=old.indexOf(',');
+ const beforeComma=commaIndex>=0 ? old.slice(0,commaIndex) : old;
+ const decimalRaw=hasComma ? old.slice(commaIndex+1).replace(/[^0-9]/g,'').slice(0,2) : '';
+ // Dấu . do người dùng nhập là hàng nghìn, nên bỏ khi tính số nhưng vẫn
+ // được tạo lại tự động bởi formatter.
+ let intRaw=beforeComma.replace(/[^0-9]/g,'');
+ intRaw=intRaw.replace(/^0+(?=\d)/,'');
+ if(intRaw==='') intRaw='0';
+ const formattedInt=intRaw.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+ const next=hasComma ? formattedInt+','+decimalRaw : formattedInt;
+ el.value=next;
+ // Tính vị trí caret dựa trên số chữ số nguyên đã có trước caret.
+ const digitsBefore=(before.replace(/[^0-9]/g,'')).length;
+ const hadCommaBefore=before.includes(',');
+ let pos=0, seen=0;
+ for(let i=0;i<next.length;i++){
+   if(/\d/.test(next[i])){
+     seen++;
+     if(seen<=digitsBefore) pos=i+1;
+   }
+ }
+ if(hadCommaBefore && next.includes(',')){
+   const commaPos=next.indexOf(',');
+   if(digitsBefore>=intRaw.length) pos=Math.max(pos,commaPos+1);
+ }
+ if(!digitsBefore) pos=0;
+ try{el.setSelectionRange(pos,pos)}catch(e){}
+}
+function commitMoneyField(el,id){
+ if(!el)return;
+ const n=parseMoneyInput(el.value);
+ el.value=formatMoneyInput(n);
+ updatePrice(id,'cost',n);
+}
+function today(){return new Date().toISOString().slice(0,10)}
+let priceDirty=false;
+function markPriceDirty(){priceDirty=true;const e=document.getElementById('priceSaveStatus');if(e){e.textContent='Có thay đổi chưa lưu';e.style.background='#fff4d6'}}
+function savePriceChanges(){saveDB();priceDirty=false;const e=document.getElementById('priceSaveStatus');if(e){e.textContent='Đã lưu';e.style.background='#f2f8f5'}showToast('Đã lưu cập nhật giá.')}
+function saveDB(){
+  try{localStorage.setItem(KEY,JSON.stringify(db));return true}
+  catch(e){console.warn('QuotePro: Local Storage không khả dụng; dữ liệu vẫn được giữ trong phiên hiện tại.',e);return false}
+}
+function parseDecimalInput(v){
+ let s=String(v??'').trim().replace(/\s/g,'');
+ if(!s)return 0;
+ s=s.replace(/\./g,',').replace(/[^0-9,]/g,'');
+ const i=s.indexOf(',');
+ if(i>=0){
+   const a=s.slice(0,i).replace(/,/g,'')||'0';
+   const b=s.slice(i+1).replace(/,/g,'').slice(0,6);
+   const n=Number(a+(b!==''?'.'+b:''));
+   return Number.isFinite(n)?n:0;
+ }
+ const n=Number(s);
+ return Number.isFinite(n)?n:0;
+}
+function formatDecimalInput(v){
+ const n=Number(v);
+ if(!Number.isFinite(n))return '';
+ return String(n).replace('.',',');
+}
+function normalizeCommaDecimal(el){
+ if(!el)return;
+ const old=String(el.value||'');
+ const caret=typeof el.selectionStart==='number'?el.selectionStart:old.length;
+ const before=old.slice(0,caret);
+ let v=old.replace(/\./g,',').replace(/[^0-9,]/g,'');
+ const i=v.indexOf(',');
+ if(i>=0)v=v.slice(0,i+1)+v.slice(i+1).replace(/,/g,'').slice(0,6);
+ el.value=v;
+ const beforeClean=before.replace(/\./g,',').replace(/[^0-9,]/g,'');
+ try{el.setSelectionRange(Math.min(beforeClean.length,v.length),Math.min(beforeClean.length,v.length));}catch(e){}
+}
+function blockCommaDecimal(){ return true; }
+function normalizeDotDecimal(el){ normalizeCommaDecimal(el); }
+function loadDB(){
+ try{const raw=localStorage.getItem(KEY);const x=raw?JSON.parse(raw):null;if(x&&typeof x==='object'){db=Object.assign(db,x);db.company=Object.assign({name:'',tax:'',phone:'',address:'',email:'',website:'',bank:'',logo:''},db.company||{})}}catch(e){console.warn('QuotePro: Không đọc được Local Storage, dùng dữ liệu phiên hiện tại.',e)}
+ if(!Array.isArray(db.prices)) db.prices=[];
+ if(!Array.isArray(db.quotes)) db.quotes=[];
+ if(!db.company||typeof db.company!=='object') db.company={name:'',tax:'',phone:'',address:'',email:'',website:'',bank:'',logo:''};
+ if(!db.prices.length) db.prices=[
+  {id:uid(),code:'DV-001',name:'Tư vấn hệ thống xử lý nước thải',detail:'Khảo sát, tư vấn giải pháp và lập phương án kỹ thuật.',unit:'gói',price:5000000,vat:10,group:'Dịch vụ'},
+  {id:uid(),code:'TB-001',name:'Bơm chìm nước thải',detail:'Bơm chìm dùng cho nước thải, bao gồm phụ kiện tiêu chuẩn.',unit:'cái',price:8500000,vat:10,group:'Thiết bị'},
+  {id:uid(),code:'VT-001',name:'Ống PVC D60',detail:'Ống PVC D60, chiều dài theo thực tế cung cấp.',unit:'m',price:85000,vat:10,group:'Vật tư'}
+ ];
+ db.prices.forEach(p=>{if(p.cost===undefined)p.cost=Number(p.price)||0;if(p.profitFactor===undefined)p.profitFactor=1.2;p.price=Math.round(p.cost*p.profitFactor)});
+ saveDB();
+}
+function normalizeDB(){
+ if(!db || typeof db!=='object') db={};
+ if(!Array.isArray(db.prices)) db.prices=[];
+ if(!Array.isArray(db.quotes)) db.quotes=[];
+ if(!db.company || typeof db.company!=='object') db.company={};
+ db.company=Object.assign({name:'',tax:'',phone:'',address:'',email:'',website:'',bank:'',logo:''},db.company);
+ if(!db.currentQuote || typeof db.currentQuote!=='object') db.currentQuote=null;
+ if(db.currentQuote){
+   if(!Array.isArray(db.currentQuote.rows)) db.currentQuote.rows=[];
+   if(db.currentQuote.vat===undefined || !Number.isFinite(Number(db.currentQuote.vat))) db.currentQuote.vat=10;
+   if(db.currentQuote.discountEnabled===undefined) db.currentQuote.discountEnabled=false;
+   if(!db.currentQuote.discountType) db.currentQuote.discountType='percent';
+   if(db.currentQuote.discountValue===undefined || !Number.isFinite(Number(db.currentQuote.discountValue))) db.currentQuote.discountValue=0;
+ }
+}
+function toggleFileMenu(e){
+ if(e)e.stopPropagation();
+ const m=document.getElementById('fileMenu');
+ if(m)m.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+ const wrap=document.querySelector('.file-menu-wrap');
+ const m=document.getElementById('fileMenu');
+ if(m&&wrap&&!wrap.contains(e.target))m.classList.remove('open');
+});
+function fileAction(action){
+ const m=document.getElementById('fileMenu');if(m)m.classList.remove('open');
+ if(action==='importQuote')document.getElementById('quoteJsonFile').click();
+ if(action==='exportQuote')exportQuotesJSON();
+ if(action==='importPrice')document.getElementById('priceJsonFile').click();
+ if(action==='exportPrice')exportPricesJSON();
+ if(action==='clearPrices')clearAllPrices();
+}
+function showTab(t){
+ const quote=document.getElementById('quote'), price=document.getElementById('price');
+ const navQuote=document.getElementById('navQuote'), navPrice=document.getElementById('navPrice');
+ if(!quote||!price)return;
+ const isQuote=t!=='price';
+ quote.style.display=isQuote?'block':'none';
+ price.style.display=isQuote?'none':'block';
+ if(navQuote)navQuote.classList.toggle('active',isQuote);
+ if(navPrice)navPrice.classList.toggle('active',!isQuote);
+ try{window.scrollTo(0,0)}catch(e){}
+}
+function newQuote(){
+ db.currentQuote={id:uid(),no:'BG-'+new Date().getFullYear()+'-001',project:'',date:today(),validity:'30 ngày',creator:'',customer:'',company:'',address:'',phone:'',vat:10,discountEnabled:false,discountType:'percent',discountValue:0,notes:'',rows:[]};
+ fillQuote();saveDB();
+}
+function fillQuote(){
+ const q=db.currentQuote,c=db.company||{};
+ ['qNo','qProject','qDate','qValidity','qCreator','customer','company','address','phone','vat','discountEnabled','discountType','discountValue','notes'].forEach((id,i)=>{
+  const map=['no','project','date','validity','creator','customer','company','address','phone','vat','discountEnabled','discountType','discountValue','notes'];
+  const el=document.getElementById(id);if(el)el.value=q[map[i]]??'';
+ });
+ const cm=[['sellerName','name'],['sellerTax','tax'],['sellerPhone','phone'],['sellerAddress','address'],['sellerEmail','email'],['sellerWebsite','website'],['sellerBank','bank']];
+ cm.forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=c[k]||''});
+ updateLogoPreview(c.logo||'');
+ updateSellerPrint();
+ renderQuote();
+ const notes=document.getElementById('notes');
+ if(notes)requestAnimationFrame(()=>autoGrowTextarea(notes));
+}
+function updateLogoPreview(src){
+ const img=document.getElementById('logoPreview'),btn=document.getElementById('removeLogoBtn');
+ if(img){img.src=src||'';img.style.display=src?'block':'none'}
+ if(btn)btn.style.display=src?'inline-flex':'none';
+}
+function handleLogoUpload(e){
+ const file=e.target.files&&e.target.files[0]; if(!file)return;
+ if(!/^image\/(png|jpeg|webp)$/.test(file.type)){showNotice('Logo không hợp lệ','Vui lòng chọn ảnh PNG, JPG hoặc WebP.');e.target.value='';return}
+ const reader=new FileReader();
+ reader.onload=()=>{db.company=db.company||{};db.company.logo=reader.result;updateLogoPreview(reader.result);updateSellerPrint();saveDB();showToast('Đã lưu logo công ty.');e.target.value=''};
+ reader.readAsDataURL(file);
+}
+function removeCompanyLogo(){
+ db.company=db.company||{};db.company.logo='';updateLogoPreview('');updateSellerPrint();saveDB();showToast('Đã xóa logo.');
+}
+function collectCompany(){
+ const c=db.company||{};
+ [['sellerName','name'],['sellerTax','tax'],['sellerPhone','phone'],['sellerAddress','address'],['sellerEmail','email'],['sellerWebsite','website'],['sellerBank','bank']].forEach(([id,k])=>{
+  const el=document.getElementById(id);if(el)c[k]=el.value;
+ });
+ db.company=c;
+ updateSellerPrint();
+ saveDB();
+}
+function updateSellerPrint(){
+ const c=db.company||{},q=db.currentQuote||{};
+ const logo=document.getElementById('printSellerLogo'), logoWrap=document.querySelector('.print-logo-wrap'), sellerPrint=document.getElementById('sellerPrint'); if(logo){logo.src=c.logo||'';logo.style.display=c.logo?'block':'none'} if(logoWrap){logoWrap.style.display=c.logo?'flex':'none'} if(sellerPrint){sellerPrint.classList.toggle('no-logo',!c.logo)}
+ document.getElementById('printSellerName').textContent=c.name||'';
+ document.getElementById('printSellerAddress').textContent=c.address||'';
+ const contact=[c.phone&&('ĐT: '+c.phone),c.tax&&('MST: '+c.tax),c.email&&('Email: '+c.email),c.website&&('Web: '+c.website)].filter(Boolean).join(' · ');
+ document.getElementById('printSellerContact').textContent=contact;
+ document.getElementById('printSellerBank').textContent=c.bank?('Ngân hàng: '+c.bank):'';
+ document.getElementById('printQuoteNo').textContent=q.no||'';
+ document.getElementById('printQuoteDate').textContent=q.date||'';
+ document.getElementById('printQuoteProject').textContent=q.project||'';
+ document.getElementById('printSignatureName').textContent=q.creator||'';
+ document.getElementById('printQuoteValidity').textContent=q.validity||'';
+ document.getElementById('printQuoteCreator').textContent=q.creator||'';
+ document.getElementById('printCustomer').textContent=q.customer||'';
+ document.getElementById('printCustomerCompany').textContent=q.company||'';
+ document.getElementById('printCustomerAddress').textContent=q.address||'';
+ document.getElementById('printCustomerPhone').textContent=q.phone||'';
+ const pn=document.getElementById('printNotesContent'); if(pn) pn.textContent=q.notes||'';
+}
+function collectQuote(){
+ collectCompany();
+ const q=db.currentQuote;
+ q.no=document.getElementById('qNo').value;q.project=document.getElementById('qProject').value;q.date=document.getElementById('qDate').value;q.validity=document.getElementById('qValidity').value;
+ q.creator=document.getElementById('qCreator').value;q.customer=document.getElementById('customer').value;q.company=document.getElementById('company').value;
+ q.address=document.getElementById('address').value;q.phone=document.getElementById('phone').value;q.vat=parseDecimalInput(document.getElementById('vat').value);q.notes=document.getElementById('notes').value;
+}
+function addQuoteHeading(){
+ normalizeCurrentQuote(); collectQuote();
+ const existing=db.currentQuote.rows.filter(r=>r.type==='heading').length;
+ const letter=String.fromCharCode(65+existing);
+ db.currentQuote.rows.push({id:uid(),type:'heading',title:letter+'. '});
+ renderQuote();saveDB();
+}
+function updateHeading(id,val){
+ const r=db.currentQuote.rows.find(x=>x.id===id);if(r){r.title=val;saveDB()}
+}
+function addQuoteSubheading(){
+ normalizeCurrentQuote(); collectQuote();
+ // Tiêu đề phụ là một dòng độc lập, có thể đặt ở bất kỳ vị trí nào trong báo giá.
+ db.currentQuote.rows.push({id:uid(),type:'subheading',title:''});
+ renderQuote();saveDB();
+}
+function updateSubheading(id,val){
+ const r=db.currentQuote.rows.find(x=>x.id===id);if(r){r.title=val;saveDB()}
+}
+function moveSubheading(id,direction){
+ normalizeCurrentQuote();
+ const rows=db.currentQuote.rows;
+ const idx=rows.findIndex(x=>x.id===id && x.type==='subheading');
+ if(idx<0)return;
+ // Tiêu đề phụ được phép di chuyển tự do qua mọi dòng, kể cả A/B/C và các hạng mục.
+ const target=direction<0?idx-1:idx+1;
+ if(target<0 || target>=rows.length){showToast(direction<0?'Tiêu đề phụ đã ở đầu báo giá.':'Tiêu đề phụ đã ở cuối báo giá.','info');return}
+ const tmp=rows[idx];rows[idx]=rows[target];rows[target]=tmp;
+ saveDB();renderQuote();
+}
+function addQuoteRow(){
+ normalizeCurrentQuote(); collectQuote();
+ db.currentQuote.rows.push({id:uid(),type:'item',priceId:'',name:'',unit:'',price:0,qty:1});
+ renderQuote();saveDB();
+}
+function changeQuoteRow(id,field,val){
+ const r=db.currentQuote.rows.find(x=>x.id===id);if(!r)return;
+ if(field==='priceId'){
+  const p=db.prices.find(x=>x.id===val);if(p){r.priceId=p.id;r.unit=p.unit;r.price=Number(p.price)||0;r.name=p.detail||''}
+ }else if(field==='qty')r.qty=parseDecimalInput(val);
+ renderQuote();saveDB();
+}
+function numberToVietnameseWords(n){
+ n=Math.round(Number(n)||0);
+ if(n===0)return 'Không đồng';
+ const ones=['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+ const read3=(x,full=false)=>{
+  const h=Math.floor(x/100),t=Math.floor((x%100)/10),u=x%10; let a=[];
+  if(h>0||full)a.push(ones[h]+' trăm');
+  if(t>1)a.push(ones[t]+' mươi');
+  else if(t===1)a.push('mười');
+  else if((h>0||full)&&u>0)a.push('lẻ');
+  if(u>0){ if(t>1&&u===1)a.push('mốt'); else if(t>=1&&u===5)a.push('lăm'); else a.push(ones[u]); }
+  return a.join(' ');
+ };
+ const units=['','nghìn','triệu','tỷ','nghìn tỷ','triệu tỷ'];
+ let groups=[]; while(n>0){groups.push(n%1000);n=Math.floor(n/1000)}
+ let out=[];
+ for(let i=groups.length-1;i>=0;i--){const g=groups[i]; if(!g)continue; const full=(i<groups.length-1&&g<100); let part=read3(g,full); if(units[i])part+=' '+units[i]; out.push(part);}
+ let text=out.join(' ').replace(/\s+/g,' ').trim();
+ return text.charAt(0).toUpperCase()+text.slice(1)+' đồng';
+}
+
+function toggleDiscount(){
+ const q=db.currentQuote; q.discountEnabled=!!document.getElementById('discountEnabled').checked;
+ updateDiscountUI(); saveDB(); renderQuote();
+}
+function changeDiscountType(v){
+ const q=db.currentQuote; q.discountType=v||'percent'; q.discountValue=0;
+ const el=document.getElementById('discountValue'); if(el)el.value='';
+ updateDiscountUI(); saveDB(); renderQuote();
+}
+function changeDiscountValue(v){
+ const q=db.currentQuote; q.discountValue=parseDecimalInput(v)||0;
+ saveDB(); renderQuote();
+}
+function updateDiscountUI(){
+ const q=db.currentQuote||{}; const on=!!q.discountEnabled;
+ const cb=document.getElementById('discountEnabled'); if(cb)cb.checked=on;
+ const tf=document.getElementById('discountTypeField'),vf=document.getElementById('discountValueField');
+ if(tf)tf.style.display=on?'block':'none'; if(vf)vf.style.display=on?'block':'none';
+ const type=document.getElementById('discountType'); if(type)type.value=q.discountType||'percent';
+ const val=document.getElementById('discountValue'); if(val)val.value=q.discountValue?formatDecimalInput(q.discountValue):'';
+ const lab=document.getElementById('discountValueLabel'); if(lab)lab.textContent=(q.discountType||'percent')==='amount'?'Giảm (đ)':'Giảm (%)';
+}
+function normalizeCurrentQuote(){
+ if(!db.currentQuote || typeof db.currentQuote!=='object'){
+  db.currentQuote={id:uid(),no:'BG-'+new Date().getFullYear()+'-001',project:'',date:today(),validity:'30 ngày',creator:'',customer:'',company:'',address:'',phone:'',vat:10,discountEnabled:false,discountType:'percent',discountValue:0,notes:'',rows:[]};
+ }
+ const q=db.currentQuote;
+ if(!Array.isArray(q.rows)) q.rows=[];
+ q.rows=q.rows.filter(r=>r&&typeof r==='object').map(r=>Object.assign({id:uid(),type:'item',priceId:'',name:'',unit:'',price:0,qty:1},r));
+ q.vat=Number.isFinite(Number(q.vat))?Number(q.vat):10;
+ q.discountEnabled=!!q.discountEnabled;
+ q.discountType=q.discountType==='amount'?'amount':'percent';
+ q.discountValue=Number.isFinite(Number(q.discountValue))?Number(q.discountValue):0;
+ return q;
+}
+function autoGrowTextarea(el){
+ if(!el)return;
+ el.classList.add('auto-grow');
+ el.style.height='auto';
+ const min=parseFloat(getComputedStyle(el).minHeight)||0;
+ const needed=Math.max(el.scrollHeight,min);
+ el.style.height=needed+'px';
+ // Giữ overflow ngang kín để dòng mô tả luôn xuống hàng thay vì bị cắt ngang.
+ el.style.overflowX='hidden';
+ el.style.overflowY='hidden';
+}
+function autoGrowTextareas(root=document){
+ const list=root.querySelectorAll?root.querySelectorAll('textarea.item-detail, textarea.price-detail, textarea.notes-auto-grow'):[];
+ list.forEach(autoGrowTextarea);
+}
+
+// V2.27: tự tính lại chiều cao khi kích thước vùng chứa/khung nhìn thay đổi.
+// Điều này tránh trường hợp đổi chiều rộng màn hình, xoay điện thoại hoặc co giãn cửa sổ
+// làm nội dung xuống thêm dòng nhưng chiều cao textarea chưa được cập nhật.
+let autoGrowResizeTimer=0;
+function refreshAutoGrowTextareas(){
+  clearTimeout(autoGrowResizeTimer);
+  autoGrowResizeTimer=setTimeout(()=>{
+    try{
+      autoGrowTextareas(document);
+    }catch(e){
+      console.warn('Auto-grow refresh failed',e);
+    }
+  },40);
+}
+window.addEventListener('resize',refreshAutoGrowTextareas,{passive:true});
+window.addEventListener('orientationchange',refreshAutoGrowTextareas,{passive:true});
+
+// Theo dõi thay đổi kích thước card/table trên các trình duyệt hỗ trợ ResizeObserver.
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(()=>refreshAutoGrowTextareas());
+  window.addEventListener('load',()=>{
+    document.querySelectorAll('#quotePrint, #price .table-wrap, #price').forEach(el=>ro.observe(el));
+    refreshAutoGrowTextareas();
+  },{once:true});
+}
+function renderQuote(){
+ const q=normalizeCurrentQuote();
+ updateDiscountUI();
+ const meta=document.getElementById('quoteMeta');
+ if(meta) meta.textContent=`${q.no||''} · ${q.date||''} · ${q.customer||'Chưa nhập khách hàng'}${q.company?' · '+q.company:''}`;
+ const tb=document.getElementById('quoteRows');
+ if(!tb)return;
+ tb.innerHTML='';
+ if(!q.rows.length){tb.innerHTML='<tr><td colspan="7" class="empty">Chưa có hạng mục. Nhấn “+ Hạng mục”.</td></tr>';}
+ let itemNo=0;
+ q.rows.forEach(r=>{
+  const tr=document.createElement('tr');
+  tr.dataset.rowId=r.id;
+  if(r.type==='heading'){
+   tr.className='quote-heading';
+   tr.innerHTML=`<td class="drag-cell"><span class="drag-handle" title="Kéo để di chuyển">⋮⋮</span></td><td colspan="5"><input value="${esc(r.title||'')}" onchange="updateHeading('${r.id}',this.value)" style="width:100%"></td><td class="delete-col"><button type="button" class="btn-danger" onclick="removeQuoteRow('${r.id}')">×</button></td>`;
+  }else if(r.type==='subheading'){
+   tr.className='quote-subheading';
+   tr.innerHTML=`<td class="drag-cell"><span class="drag-handle" title="Nhấn giữ rồi kéo để di chuyển" aria-label="Kéo để di chuyển">⋮⋮</span></td><td colspan="5"><input value="${esc(r.title||'')}" placeholder="Tiêu đề phụ..." onchange="updateSubheading('${r.id}',this.value)"></td><td class="delete-col"><button type="button" class="btn-danger" onclick="removeQuoteRow('${r.id}')">×</button></td>`;
+  }else{
+   itemNo++;
+   const selectedPrice=db.prices.find(p=>p.id===r.priceId);
+   tr.innerHTML=`<td class="drag-cell"><span class="drag-handle" title="Kéo để di chuyển">⋮⋮</span><div>${itemNo}</div></td><td><button type="button" class="quote-pick-btn" onclick="openPricePicker('${r.id}')">${esc(selectedPrice?.name||'Chọn hạng mục áp giá...')}</button><textarea class="item-detail" placeholder="Mô tả chi tiết hạng mục..." oninput="autoGrowTextarea(this)" onchange="changeQuoteRow('${r.id}','name',this.value)">${esc(r.name||'')}</textarea></td><td>${esc(r.unit||'')}</td><td class="num"><input type="text" class="comma-decimal qty-input" inputmode="decimal" autocomplete="off" value="${formatDecimalInput(r.qty)}" oninput="normalizeCommaDecimal(this)" onchange="changeQuoteRow('${r.id}','qty',this.value)"></td><td class="num"><input type="text" class="money-input quote-price-input" inputmode="decimal" autocomplete="off" value="${formatMoneyInput(r.price)}" oninput="formatMoneyLive(this)" onblur="commitQuoteRowPrice(this,'${r.id}')"></td><td class="num">${money((Number(r.price)||0)*(Number(r.qty)||0))}</td><td class="delete-col"><button type="button" class="quote-edit-btn" title="Mở Cập nhật giá và tìm đúng hạng mục" onclick="editQuotePrice('${r.id}')">✎</button><button type="button" class="btn-danger" title="Xóa hạng mục" onclick="removeQuoteRow('${r.id}')">×</button></td>`;
+  }
+  tb.appendChild(tr);
+ });
+ const subtotal=q.rows.filter(r=>r.type==='item').reduce((sum,r)=>sum+(Number(r.price)||0)*(Number(r.qty)||0),0);
+ let discount=0;
+ if(q.discountEnabled){discount=q.discountType==='amount'?Math.min(subtotal,Math.max(0,Number(q.discountValue)||0)):Math.min(subtotal,Math.max(0,subtotal*(Number(q.discountValue)||0)/100));}
+ const taxable=Math.max(0,subtotal-discount), vatAmount=taxable*(Number(q.vat)||0)/100, grandTotal=taxable+vatAmount;
+ const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+ set('subtotal',money(subtotal));
+ const dr=document.getElementById('discountRow');if(dr){dr.style.display=q.discountEnabled?'flex':'none';dr.classList.toggle('discount-print-hidden',!q.discountEnabled);}
+ set('discountLabel',q.discountType==='amount'?'Giảm giá':'Giảm giá ('+formatDecimalInput(q.discountValue||0)+'%)');
+ set('discountAmount',money(discount));
+ set('vatLabel','VAT ('+formatDecimalInput(q.vat||0)+'%)');set('vatAmount',money(vatAmount));set('grandTotal',money(grandTotal));set('grandTotalWords',numberToVietnameseWords(grandTotal));
+  initQuoteDragDrop();
+  requestAnimationFrame(()=>{
+    autoGrowTextareas(tb);
+    requestAnimationFrame(()=>autoGrowTextareas(tb));
+  });
+}
+function commitQuoteRowPrice(el,rowId){
+ if(!el)return;
+ const r=db.currentQuote.rows.find(x=>x.id===rowId);
+ if(!r||r.type==='heading')return;
+ const n=parseMoneyInput(el.value);
+ if(!Number.isFinite(n)||n<0){el.value=formatMoneyInput(r.price);showToast('Đơn giá không hợp lệ.','error');return}
+ if(Number(r.price)!==n){
+  r.price=n;
+  saveDB();
+  renderQuote();
+ }else{
+  el.value=formatMoneyInput(r.price);
+ }
+}
+function editQuotePrice(rowId){
+ const r=db.currentQuote.rows.find(x=>x.id===rowId);
+ if(!r||r.type==='heading')return;
+ const p=db.prices.find(x=>x.id===r.priceId);
+ if(!p){showToast('Hạng mục này không còn trong bảng giá.','error');return}
+ showTab('price');
+ const search=document.getElementById('priceSearch');
+ if(search)search.value=p.name||p.code||'';
+ renderPrices();
+ setTimeout(()=>{
+  document.querySelectorAll('.quote-price-highlight').forEach(x=>x.classList.remove('quote-price-highlight'));
+  const row=document.querySelector('#priceRows tr[data-price-id="'+CSS.escape(p.id)+'"]');
+  if(row){
+   row.classList.add('quote-price-highlight');
+   row.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+ },80);
+}
+let quoteDragState=null;
+function clearQuoteDragVisuals(){
+ document.querySelectorAll('#quoteRows .quote-row-dragging').forEach(x=>x.classList.remove('quote-row-dragging'));
+ document.querySelectorAll('#quoteRows .quote-row-drop-target').forEach(x=>x.classList.remove('quote-row-drop-target'));
+ document.querySelectorAll('#quoteRows .quote-drag-placeholder').forEach(x=>x.remove());
+}
+function finishQuoteDrag(e){
+ const state=quoteDragState;
+ if(!state || (e && e.pointerId!==undefined && e.pointerId!==state.pointerId))return;
+ quoteDragState=null;
+ clearTimeout(state.timer);
+ document.removeEventListener('pointermove',handleQuoteDragMove);
+ document.removeEventListener('pointerup',finishQuoteDrag);
+ document.removeEventListener('pointercancel',finishQuoteDrag);
+ if(state.started){
+  const row=state.row, ph=state.placeholder;
+  if(ph && ph.parentNode){ph.parentNode.insertBefore(row,ph);ph.remove();}
+  clearQuoteDragVisuals();
+  const rows=[...document.querySelectorAll('#quoteRows tr[data-row-id]')];
+  const order=rows.map(tr=>tr.dataset.rowId);
+  const map=new Map(db.currentQuote.rows.map(r=>[r.id,r]));
+  db.currentQuote.rows=order.map(id=>map.get(id)).filter(Boolean);
+  saveDB();
+  renderQuote();
+ }else{
+  clearQuoteDragVisuals();
+ }
+}
+function beginQuoteDrag(state,e){
+ if(quoteDragState!==state || state.started)return;
+ state.started=true;
+ state.row.classList.add('quote-row-dragging');
+ state.handle.classList.add('dragging');
+ try{state.handle.setPointerCapture?.(state.pointerId)}catch(_){ }
+ state.placeholder=document.createElement('tr');
+ state.placeholder.className='quote-drag-placeholder';
+ state.placeholder.innerHTML='<td colspan="7"><div class="quote-drag-gap"></div></td>';
+ state.row.parentNode.insertBefore(state.placeholder,state.row.nextSibling);
+ if(e){e.preventDefault();}
+}
+function startQuoteDrag(e){
+ const handle=e.target.closest?.('.drag-handle');
+ if(!handle)return;
+ if(e.button!==undefined && e.button!==0)return;
+ const row=handle.closest('#quoteRows tr[data-row-id]');
+ if(!row)return;
+ if(quoteDragState)finishQuoteDrag();
+ const state={row,handle,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,started:false,placeholder:null,timer:null,pointerType:e.pointerType||'mouse'};
+ quoteDragState=state;
+ document.addEventListener('pointermove',handleQuoteDragMove,{passive:false});
+ document.addEventListener('pointerup',finishQuoteDrag);
+ document.addEventListener('pointercancel',finishQuoteDrag);
+ // Desktop mouse: start immediately so normal click-drag works reliably.
+ // Touch/pen: require a short hold to avoid hijacking normal scrolling.
+ if(state.pointerType==='mouse'){
+   beginQuoteDrag(state,e);
+ }else{
+   state.timer=setTimeout(()=>beginQuoteDrag(state),260);
+ }
+}
+function handleQuoteDragMove(e){
+ const state=quoteDragState;
+ if(!state || e.pointerId!==state.pointerId)return;
+ state.lastX=e.clientX; state.lastY=e.clientY;
+ if(!state.started){
+  const dx=e.clientX-state.startX, dy=e.clientY-state.startY;
+  // On touch, a large move before the hold means the user is scrolling, not dragging.
+  if(state.pointerType!=='mouse' && Math.hypot(dx,dy)>14){clearTimeout(state.timer);finishQuoteDrag(e);}
+  return;
+ }
+ e.preventDefault();
+ const tb=document.getElementById('quoteRows');
+ const rows=[...tb.querySelectorAll('tr[data-row-id]')].filter(r=>r!==state.row);
+ const el=document.elementFromPoint(e.clientX,e.clientY);
+ const target=el?.closest?.('#quoteRows tr[data-row-id]');
+ if(target && target!==state.row){
+  const rect=target.getBoundingClientRect();
+  const before=e.clientY < rect.top + rect.height/2;
+  if(before) tb.insertBefore(state.placeholder,target); else tb.insertBefore(state.placeholder,target.nextSibling);
+ }else if(rows.length){
+  // Explicitly handle the two boundaries: the first and last row can be
+  // difficult to hit because the pointer may be over the table/blank area.
+  const first=rows[0], last=rows[rows.length-1];
+  const fr=first.getBoundingClientRect(), lr=last.getBoundingClientRect();
+  if(e.clientY < fr.top + fr.height/2){
+   tb.insertBefore(state.placeholder,first);
+  }else if(e.clientY > lr.top + lr.height/2){
+   tb.insertBefore(state.placeholder,last.nextSibling);
+  }
+ }
+ // Auto-scroll while dragging near the top/bottom edge of the viewport.
+ const edge=70, speed=14;
+ if(e.clientY<edge) window.scrollBy(0,-speed);
+ else if(e.clientY>window.innerHeight-edge) window.scrollBy(0,speed);
+}
+function initQuoteDragDrop(){
+ const tb=document.getElementById('quoteRows');
+ if(!tb || tb.dataset.dragReady)return;
+ tb.dataset.dragReady='1';
+ tb.addEventListener('pointerdown',startQuoteDrag);
+}
+
+function removeQuoteRow(id){normalizeCurrentQuote();db.currentQuote.rows=db.currentQuote.rows.filter(x=>x.id!==id);renderQuote();saveDB()}
+function loadOldQuote(e){
+ const file=e.target.files[0];if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const x=JSON.parse(reader.result);
+   let q=x.currentQuote||null;
+   if(!q && Array.isArray(x.quotes) && x.quotes.length) q=x.quotes[x.quotes.length-1];
+   if(!q || !Array.isArray(q.rows)) throw Error();
+   db.currentQuote=JSON.parse(JSON.stringify(q));
+   fillQuote();
+   showTab('quote');
+   document.getElementById('priceUpdateStatus').textContent='Đã tải báo giá cũ. Giá hiện tại vẫn giữ nguyên cho đến khi bạn bấm “Cập nhật giá mới”.';
+   saveDB();
+   showToast('Đã tải báo giá cũ.');
+  }catch(err){showNotice('Không thể tải báo giá','File báo giá không hợp lệ hoặc không đúng định dạng QuotePro.');}
+ };
+ reader.readAsText(file);e.target.value='';
+}
+function updatePricesFromCurrent(){
+ collectQuote();
+ let changed=0,missing=0;
+ db.currentQuote.rows.forEach(r=>{
+  if(r.type==='heading')return;
+  const p=db.prices.find(x=>x.id===r.priceId) ||
+          db.prices.find(x=>x.code && r.code && x.code===r.code) ||
+          db.prices.find(x=>x.name && r.name && x.name===r.name);
+  if(p){
+   const old=Number(r.price)||0, next=Number(p.price)||0;
+   if(old!==next)changed++;
+   r.priceId=p.id;r.price=next;r.unit=p.unit;
+  }else missing++;
+ });
+ renderQuote();saveDB();
+ document.getElementById('priceUpdateStatus').textContent=
+  `Đã cập nhật giá mới: ${changed} hạng mục thay đổi${missing?` · ${missing} hạng mục không tìm thấy trong bảng giá`:''}.`;
+}
+function saveQuote(){
+ collectCompany();
+ collectQuote();const q=JSON.parse(JSON.stringify(db.currentQuote));q.id=uid();
+ const idx=db.quotes.findIndex(x=>x.no===q.no);if(idx>=0)db.quotes[idx]=q;else db.quotes.push(q);
+ saveDB();renderSavedQuotes();showToast('Đã lưu báo giá.');
+}
+function renderSavedQuotes(){
+ const el=document.getElementById('savedQuotes');
+ if(!db.quotes.length){el.textContent='Chưa có báo giá đã lưu.';return}
+ el.innerHTML=db.quotes.map(q=>`<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:8px 0">
+ <span><b>${esc(q.no)}</b> · ${esc(q.customer||'Chưa có khách hàng')} · ${esc(q.date||'')}</span>
+ <span class="saved-quote-actions"><button type="button" class="btn-light" onclick="loadSaved('${q.id}')">Mở</button><button type="button" class="btn-danger" onclick="deleteSaved('${q.id}')">Xóa</button></span></div>`).join('');
+}
+function loadSaved(id){const q=db.quotes.find(x=>x.id===id);if(q){db.currentQuote=JSON.parse(JSON.stringify(q));fillQuote();showTab('quote')}}
+async function deleteSaved(id){const ok=await showNotice('Xóa báo giá?','Báo giá này sẽ bị xóa khỏi danh sách đã lưu.',[{label:'Hủy',value:false,cls:'btn-light'},{label:'Xóa',value:true,cls:'btn-danger'}]);if(ok){db.quotes=db.quotes.filter(x=>x.id!==id);saveDB();renderSavedQuotes();showToast('Đã xóa báo giá.')}}
+function addPrice(){
+ const p={id:uid(),code:'',name:'Hạng mục mới',detail:'',unit:'',cost:0,profitFactor:1.2,price:0,vat:10,group:''};db.prices.push(p);markPriceDirty();renderPrices()
+}
+function updatePrice(id,field,val){
+ const p=db.prices.find(x=>x.id===id);if(!p)return;
+ if(field==='cost'){
+  p.cost=Number(val)||0;
+  p.price=Math.round(p.cost*(Number(p.profitFactor)||0));
+ }else if(field==='profitFactor'){
+  p.profitFactor=parseDecimalInput(val);
+  p.price=Math.round((Number(p.cost)||0)*p.profitFactor);
+ }else if(field==='price'){
+  p.price=Number(val)||0;
+ }else if(field==='vat'){
+  p.vat=parseDecimalInput(val);
+ }else p[field]=val;
+ markPriceDirty();renderPrices();renderQuote();
+}
+async function clearAllPrices(){
+  if(!Array.isArray(db.prices)||db.prices.length===0){
+    showToast('Danh mục đơn giá hiện đang trống.');
+    return;
+  }
+  const count=db.prices.length;
+  const ok=await showNotice(
+    'Xóa toàn bộ đơn giá?',
+    `Bạn sắp xóa toàn bộ ${count} đơn giá khỏi danh mục. Thay đổi chưa được ghi chính thức cho đến khi bạn bấm “Lưu cập nhật giá”. Bạn có chắc chắn muốn tiếp tục?`,
+    [
+      {label:'Hủy',value:false,cls:'btn-light'},
+      {label:'Xóa toàn bộ',value:true,cls:'btn-danger'}
+    ]
+  );
+  if(!ok)return;
+  db.prices=[];
+  markPriceDirty();
+  renderPrices();
+  showToast(`Đã xóa ${count} đơn giá. Bấm Lưu cập nhật giá để ghi thay đổi.`);
+}
+async function deletePrice(id){const ok=await showNotice('Xóa hạng mục?','Hạng mục này sẽ bị xóa khỏi danh mục giá.',[{label:'Hủy',value:false,cls:'btn-light'},{label:'Xóa',value:true,cls:'btn-danger'}]);if(ok){db.prices=db.prices.filter(x=>x.id!==id);markPriceDirty();renderPrices();showToast('Đã xóa hạng mục. Bấm Lưu cập nhật giá để ghi thay đổi.')} }
+function duplicatePrice(id){
+ const src=db.prices.find(x=>x.id===id);
+ if(!src)return;
+ const copy=JSON.parse(JSON.stringify(src));
+ copy.id=uid();
+ copy.name=(src.name||'Hạng mục')+' (bản sao)';
+ if(src.code) copy.code=src.code+'-COPY';
+ db.prices.push(copy);
+ markPriceDirty();
+ renderPrices();
+ requestAnimationFrame(()=>{const row=document.querySelector(`tr[data-price-id="${copy.id}"]`);if(row){row.scrollIntoView({behavior:'smooth',block:'center'});const input=row.querySelector('.price-name');if(input){input.focus();input.select();}}});
+ showToast('Đã nhân đôi hạng mục. Chỉnh sửa và bấm Lưu cập nhật giá để ghi thay đổi.');
+}
+function renderPrices(){
+ const term=(document.getElementById('priceSearch').value||'').toLowerCase();const tb=document.getElementById('priceRows');tb.innerHTML='';
+ const arr=db.prices.filter(p=>(p.name+' '+(p.detail||'')+' '+p.code+' '+p.group).toLowerCase().includes(term));
+ if(!arr.length){tb.innerHTML='<tr><td colspan="10" class="empty">Không có hạng mục.</td></tr>';return}
+ arr.forEach(p=>{const tr=document.createElement('tr');tr.dataset.priceId=p.id;tr.innerHTML=
+ `<td><input value="${esc(p.code)}" onchange="updatePrice('${p.id}','code',this.value)"></td>
+ <td><input class="price-name" value="${esc(p.name)}" onchange="updatePrice('${p.id}','name',this.value)"></td>
+ <td><textarea class="price-detail" placeholder="Ghi chi tiết hạng mục..." oninput="autoGrowTextarea(this)" onchange="updatePrice('${p.id}','detail',this.value)">${esc(p.detail||'')}</textarea></td>
+ <td><input value="${esc(p.unit)}" onchange="updatePrice('${p.id}','unit',this.value)"></td>
+ <td class="num"><input class="money-input" inputmode="decimal" autocomplete="off" value="${formatMoneyInput(p.cost)}" oninput="formatMoneyLive(this)" onchange="commitMoneyField(this,'${p.id}')" onblur="commitMoneyField(this,'${p.id}')"></td>
+ <td class="num"><input type="text" class="comma-decimal" inputmode="decimal" autocomplete="off" value="${formatDecimalInput(Number(p.profitFactor)||1.2)}" oninput="normalizeCommaDecimal(this)" onchange="updatePrice('${p.id}','profitFactor',this.value)"></td>
+ <td class="num"><strong>${money(p.price)}</strong></td>
+ 
+ <td><input value="${esc(p.group)}" onchange="updatePrice('${p.id}','group',this.value)"></td>
+ <td class="delete-col"><button type="button" class="btn-light" title="Nhân đôi hạng mục" onclick="duplicatePrice('${p.id}')">⧉</button> <button type="button" class="btn-danger" title="Xóa hạng mục" onclick="deletePrice('${p.id}')">Xóa</button></td>`;
+ tb.appendChild(tr)})
+ requestAnimationFrame(()=>autoGrowTextareas(tb));
+}
+function exportPricesJSON(){
+ const payload={type:'QuotePro-Prices',version:1,exportedAt:new Date().toISOString(),prices:db.prices};
+ downloadJSON(payload,'quotepro-gia-'+today()+'.json');
+}
+function exportQuotesJSON(){
+ collectQuote();
+ const payload={type:'QuotePro-Quotes',version:1,exportedAt:new Date().toISOString(),company:db.company,quotes:db.quotes,currentQuote:db.currentQuote};
+ downloadJSON(payload,'quotepro-bao-gia-'+today()+'.json');
+}
+function downloadJSON(payload,name){
+ const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)
+}
+function importPricesJSON(e){
+ const file=e.target.files[0];if(!file)return;const reader=new FileReader();
+ reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.prices))throw Error();db.prices=Array.isArray(x.prices)?x.prices:[];db.prices.forEach(p=>{if(p.cost===undefined)p.cost=Number(p.price)||0;if(p.profitFactor===undefined)p.profitFactor=1.2;p.price=Math.round((Number(p.cost)||0)*p.profitFactor)});saveDB();renderPrices();renderQuote();showToast('Nhập giá thành công.')}catch(err){showNotice('Không thể nhập giá','File JSON giá không hợp lệ.');}};reader.readAsText(file);e.target.value=''
+}
+function importQuotesJSON(e){
+ const file=e.target.files[0];if(!file)return;const reader=new FileReader();
+ reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.quotes))throw Error();db.quotes=Array.isArray(x.quotes)?x.quotes:[];db.company=Object.assign(db.company||{},x.company||{});if(x.currentQuote)db.currentQuote=x.currentQuote;normalizeDB();saveDB();fillQuote();renderSavedQuotes();document.getElementById('priceUpdateStatus').textContent='Đã nhập báo giá. Giá cũ được giữ nguyên; dùng “Cập nhật giá mới” nếu muốn lấy giá hiện tại.';showToast('Nhập báo giá thành công.')}catch(err){showNotice('Không thể nhập báo giá','File JSON báo giá không hợp lệ.');}};reader.readAsText(file);e.target.value=''
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+try{
+ loadDB();
+ normalizeDB();
+ normalizeCurrentQuote();
+ fillQuote();
+ showTab('quote');
+ renderPrices();
+ renderSavedQuotes();
+ document.querySelectorAll('.company-card input').forEach(el=>el.addEventListener('change',collectCompany));
+}catch(e){console.error('QuotePro init error',e)}
+window.addEventListener('beforeprint',()=>{try{collectQuote();updateSellerPrint();}catch(e){console.error(e)}});
+
+async function generateQuotePDF(){
+  normalizeCurrentQuote();
+  collectQuote();
+
+  if(!window.pdfMake){
+    showToast('Chưa tải được thư viện PDF. Vui lòng kiểm tra kết nối mạng rồi thử lại.','error');
+    return;
+  }
+
+  const q=db.currentQuote||{};
+  const c=db.company||{};
+  const GREEN='#117A5A', GREEN_DARK='#0B5D45', GREEN_LIGHT='#EEF7F3';
+  const GRID='#B8C4BF', TEXT='#1F2A27', MUTED='#66736E';
+
+  const rows=[];
+  let itemNo=0;
+  const visibleRows=Array.isArray(q.rows)?q.rows:[];
+
+  visibleRows.forEach(r=>{
+    if(!r || typeof r!=='object') return;
+
+    if(r.type==='heading'){
+      rows.push([
+        {text:'',fillColor:GREEN_LIGHT},
+        {text:String(r.title||''),colSpan:5,bold:true,color:GREEN_DARK,
+         fillColor:GREEN_LIGHT,margin:[2,3,2,3]},
+        {},{},{},{}
+      ]);
+      return;
+    }
+
+    if(r.type==='subheading'){
+      rows.push([
+        {text:'',fillColor:'#F8FAF9'},
+        {text:String(r.title||''),colSpan:5,bold:true,italics:true,color:TEXT,
+         fillColor:'#F8FAF9',margin:[2,3,2,3]},
+        {},{},{},{}
+      ]);
+      return;
+    }
+
+    itemNo++;
+    const p=db.prices.find(x=>x.id===r.priceId);
+    const title=p?.name||'';
+    const detail=String(r.name||'');
+    const stack=[];
+    if(title) stack.push({text:title,bold:true,fontSize:8.7,color:TEXT});
+    if(detail) stack.push({text:detail,fontSize:7.8,color:MUTED,
+      margin:[0,1.5,0,0],lineHeight:1.15});
+    if(!stack.length) stack.push({text:'',fontSize:8});
+
+    const qty=Number(r.qty)||0;
+    const price=Number(r.price)||0;
+    const total=price*qty;
+
+    rows.push([
+      {text:String(itemNo),alignment:'center',fontSize:8.2,color:TEXT},
+      {stack,margin:[0,1,0,1]},
+      {text:String(r.unit||''),alignment:'center',fontSize:8.2,color:TEXT},
+      {text:formatDecimalInput(qty),alignment:'center',fontSize:8.2,color:TEXT},
+      {text:moneyPlain(price),alignment:'right',fontSize:8.2,color:TEXT},
+      {text:moneyPlain(total)+' đ',alignment:'right',fontSize:8.2,color:TEXT}
+    ]);
+  });
+
+  const subtotal=visibleRows.filter(r=>r.type==='item')
+    .reduce((sum,r)=>sum+(Number(r.price)||0)*(Number(r.qty)||0),0);
+
+  let discount=0;
+  if(q.discountEnabled){
+    discount=q.discountType==='amount'
+      ? Math.min(subtotal,Math.max(0,Number(q.discountValue)||0))
+      : Math.min(subtotal,Math.max(0,subtotal*(Number(q.discountValue)||0)/100));
+  }
+
+  const taxable=Math.max(0,subtotal-discount);
+  const vatAmount=taxable*(Number(q.vat)||0)/100;
+  const grandTotal=taxable+vatAmount;
+
+  const printDate=(()=>{
+    const s=String(q.date||'');
+    const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+  })();
+
+  const companyLines=[];
+  if(c.name) companyLines.push({text:c.name,bold:true,fontSize:11,
+    color:GREEN_DARK,margin:[0,0,0,2]});
+  if(c.address) companyLines.push({text:c.address,fontSize:7.8,
+    color:MUTED,margin:[0,0,0,1]});
+  const contactLine1=[
+    c.phone&&('ĐT: '+c.phone),
+    c.tax&&('MST: '+c.tax),
+    c.email&&('Email: '+c.email)
+  ].filter(Boolean).join('  ·  ');
+  if(contactLine1) companyLines.push({text:contactLine1,fontSize:7.1,color:MUTED,noWrap:true});
+  if(c.website) companyLines.push({text:'Web: '+c.website,fontSize:7.1,color:MUTED,noWrap:true});
+  if(c.bank) companyLines.push({text:'Ngân hàng: '+c.bank,fontSize:7.5,
+    color:MUTED,margin:[0,1,0,0]});
+
+  const label=t=>({text:t.toUpperCase(),fontSize:6.8,bold:true,
+    color:MUTED,margin:[0,0,0,1]});
+  const value=t=>({text:String(t||''),fontSize:8.3,color:TEXT});
+
+  const infoBody=[
+    [
+      {stack:[label('Khách hàng'),value(q.customer)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{},
+      {stack:[label('Đơn vị'),value(q.company)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{}
+    ],
+    [
+      {stack:[label('Dự án'),value(q.project)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{},
+      {stack:[label('Địa chỉ'),value(q.address)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{}
+    ],
+    [
+      {stack:[label('Thời hạn báo giá'),value(q.validity)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{},
+      {stack:[label('Số điện thoại'),value(q.phone)],colSpan:3,fillColor:'#F7F9F8'},
+      {},{}
+    ]
+  ];
+
+  const content=[
+    {
+      columns:[
+        c.logo
+          ? {image:c.logo,width:68,fit:[68,68],margin:[0,-6,12,0]}
+          : {text:'',width:1},
+        {stack:companyLines,width:'*',margin:[0,2,0,0]},
+        {width:150,stack:[
+          {text:'BÁO GIÁ',fontSize:8,bold:true,color:GREEN,alignment:'right',
+            margin:[0,0,0,2]},
+          {text:q.no||'',fontSize:8,color:MUTED,alignment:'right',margin:[0,0,0,1]},
+          {text:printDate||'',fontSize:7.5,color:MUTED,alignment:'right'}
+        ],margin:[0,3,0,0]}
+      ],
+      margin:[0,0,0,7]
+    },
+    {canvas:[{type:'line',x1:0,y1:0,x2:519,y2:0,lineWidth:0.8,
+      lineColor:GREEN}],margin:[0,0,0,7]},
+    {text:'BẢNG BÁO GIÁ',fontSize:16,bold:true,color:TEXT,
+      alignment:'center',margin:[0,0,0,7]},
+    {
+      table:{widths:['*','*','*','*','*','*'],body:infoBody},
+      layout:{
+        hLineWidth:()=>0,vLineWidth:()=>0,
+        paddingLeft:()=>7,paddingRight:()=>7,
+        paddingTop:()=>5,paddingBottom:()=>5
+      },
+      margin:[0,0,0,7]
+    },
+    {canvas:[{type:'line',x1:0,y1:0,x2:519,y2:0,lineWidth:0.35,
+      lineColor:GRID}],margin:[0,0,0,7]},
+    {text:'Kính gửi Quý Khách hàng,',fontSize:8.8,color:TEXT,margin:[0,0,0,2]},
+    {text:'Cảm ơn Quý Khách hàng đã tin tưởng. Theo yêu cầu, chúng tôi xin gửi báo giá chi tiết như sau:',
+      fontSize:8.5,color:MUTED,margin:[0,0,0,7]},
+    {
+      table:{
+        headerRows:1,widths:[29,'*',43,40,72,82],
+        body:[
+          [
+            {text:'STT',bold:true,color:'#FFFFFF',alignment:'center'},
+            {text:'HẠNG MỤC / ĐỀ MỤC',bold:true,color:'#FFFFFF'},
+            {text:'ĐVT',bold:true,color:'#FFFFFF',alignment:'center'},
+            {text:'SL',bold:true,color:'#FFFFFF',alignment:'center'},
+            {text:'ĐƠN GIÁ',bold:true,color:'#FFFFFF',alignment:'right'},
+            {text:'THÀNH TIỀN',bold:true,color:'#FFFFFF',alignment:'right'}
+          ],
+          ...rows
+        ]
+      },
+      layout:{
+        fillColor:(rowIndex)=>rowIndex===0?GREEN:null,
+        hLineWidth:(i,node)=>i===0||i===node.table.body.length?0.75:0.45,
+        vLineWidth:()=>0.45,hLineColor:()=>GRID,vLineColor:()=>GRID,
+        paddingLeft:()=>5,paddingRight:()=>5,
+        paddingTop:(i)=>i===0?4:3,paddingBottom:(i)=>i===0?4:3
+      },
+      dontBreakRows:true,keepWithHeaderRows:1,margin:[0,0,0,8]
+    },
+    {
+      columns:[
+        {text:'',width:'*'},
+        {
+          width:225,
+          table:{
+            widths:['*',112],
+            body:[
+              [{text:'Tạm tính',alignment:'right',color:MUTED},
+               {text:moneyPlain(subtotal)+' đ',bold:true,alignment:'right',color:TEXT}],
+              ...(q.discountEnabled ? [[
+                {text:q.discountType==='amount'?'Giảm giá':
+                  'Giảm giá ('+formatDecimalInput(q.discountValue||0)+'%)',
+                  alignment:'right',color:MUTED},
+                {text:moneyPlain(discount)+' đ',alignment:'right',color:TEXT}
+              ]] : []),
+              [{text:'VAT ('+formatDecimalInput(q.vat||0)+'%)',
+                alignment:'right',color:MUTED},
+               {text:moneyPlain(vatAmount)+' đ',alignment:'right',color:TEXT}],
+              [{text:'TỔNG THANH TOÁN',bold:true,fontSize:9.5,
+                alignment:'right',color:GREEN_DARK,margin:[0,2,0,0]},
+               {text:moneyPlain(grandTotal)+' đ',bold:true,fontSize:10.5,
+                alignment:'right',color:GREEN_DARK,margin:[0,2,0,0]}]
+            ]
+          },
+          layout:{
+            hLineWidth:(i)=>i===3?0.8:0,vLineWidth:()=>0,
+            hLineColor:()=>GREEN,paddingLeft:()=>2,paddingRight:()=>0,
+            paddingTop:()=>2.5,paddingBottom:()=>2.5
+          }
+        }
+      ],
+      margin:[0,0,0,3]
+    },
+    {text:[
+      {text:'Bằng chữ: ',bold:true,color:TEXT},
+      {text:numberToVietnameseWords(grandTotal),color:MUTED}
+    ],fontSize:8.3,margin:[0,3,0,7]}
+  ];
+
+  if(String(q.notes||'').trim()){
+    content.push({
+      unbreakable:true,
+      table:{widths:['*'],body:[[
+        {stack:[
+          {text:'GHI CHÚ / ĐIỀU KHOẢN',fontSize:7.2,bold:true,
+            color:GREEN_DARK,margin:[0,0,0,2]},
+          {text:String(q.notes||''),fontSize:8,color:TEXT,lineHeight:1.3}
+        ],fillColor:'#F7F9F8',margin:[7,5,7,5]}
+      ]]},
+      layout:{
+        hLineWidth:()=>0.35,vLineWidth:()=>0.35,
+        hLineColor:()=>GRID,vLineColor:()=>GRID
+      },
+      margin:[0,0,0,8]
+    });
+  }
+
+  content.push({
+    unbreakable:true,
+    columns:[
+      {text:'',width:'*'},
+      {width:175,stack:[
+        {text:'NGƯỜI LẬP BÁO GIÁ',bold:true,alignment:'center',
+          fontSize:8.5,color:TEXT},
+        {text:'(Ký, ghi rõ họ tên)',italics:true,alignment:'center',
+          fontSize:7.5,color:MUTED},
+        {text:' ',fontSize:8,margin:[0,10,0,10]},
+        {text:q.creator||'',alignment:'center',bold:true,fontSize:8.5,color:TEXT}
+      ]}
+    ],
+    margin:[0,3,0,0]
+  });
+
+  const docDefinition={
+    pageSize:'A4',
+    pageMargins:[38,34,38,38],
+    defaultStyle:{font:'Roboto',fontSize:8.5,color:TEXT},
+    content,
+    footer:(currentPage,pageCount)=>({
+      columns:[
+        {text:c.name||'',alignment:'left',fontSize:7,color:'#7A8581'},
+        {text:'Trang '+currentPage+' / '+pageCount,alignment:'right',
+          fontSize:7,color:'#7A8581'}
+      ],
+      margin:[38,10,38,0]
+    }),
+    info:{
+      title:'Bảng báo giá '+(q.no||''),
+      subject:'Báo giá',
+      author:c.name||'QuotePro'
+    }
+  };
+
+  try{
+    pdfMake.createPdf(docDefinition).open();
+  }catch(err){
+    console.error(err);
+    showToast('Không thể tạo PDF: '+(err?.message||err),'error');
+  }
+}
+function moneyPlain(v){
+  const n=Number(v)||0;
+  return new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(n);
+}
+
+</script>
+</body>
+</html>
